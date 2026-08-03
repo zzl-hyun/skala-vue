@@ -83,4 +83,12 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  cursor: url("bonobono-cursor.png")0 0, auto;
+}
+button{
+  cursor: url("bonobono-cursor.png")0 0, auto;
+
+}
+.practice-section{
+  border: 0.1px solid black;
 }

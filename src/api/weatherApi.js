@@ -1,11 +1,23 @@
 import axios from 'axios'
 import { cities } from '@/data/cities'
 
+/**
+ * OpenWeather API 요청과 브라우저 캐시를 관리하는 모듈
+ *
+ * 현재 날씨, 도시 검색, 사용자 추가 도시, 시간대별·5일 예보를 한 곳에서 처리한다.
+ * API 키는 Vite 환경 변수에서 읽으며, 프론트엔드 실습용 구조라 브라우저 번들에 포함된다.
+ */
+
+// 현재 날씨와 예보는 한 시간 동안 재사용해 불필요한 API 호출을 줄인다.
 const CACHE_KEY = 'weather-list'
 const CACHE_DURATION = 60 * 60 * 1000
 const FORECAST_CACHE_PREFIX = 'five-day-forecast-v2'
 const CUSTOM_CITIES_KEY = 'weather-custom-cities'
 
+/**
+ * 현재 날씨 캐시의 구조와 만료 시간을 확인한다.
+ * 유효한 경우 목록과 만료 시각을 반환하고, 손상되거나 만료된 캐시는 제거한다.
+ */
 export const getWeatherCacheInfo = () => {
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY))
@@ -31,6 +43,10 @@ export const getWeatherCacheInfo = () => {
   }
 }
 
+/**
+ * 현재 날씨 목록과 저장 시각을 localStorage에 기록한다.
+ * 화면에서 남은 캐시 시간을 계산할 수 있도록 만료 시각도 반환한다.
+ */
 export const saveWeatherListCache = (weatherList) => {
   const savedAt = Date.now()
 
@@ -48,6 +64,7 @@ export const saveWeatherListCache = (weatherList) => {
   }
 }
 
+// 사용자가 검색으로 추가한 도시는 기본 도시 목록과 분리해서 보관한다.
 const getCustomCities = () => {
   try {
     const customCities = JSON.parse(localStorage.getItem(CUSTOM_CITIES_KEY))
@@ -59,8 +76,14 @@ const getCustomCities = () => {
   }
 }
 
+/**
+ * 도시 이름 또는 좌표를 이용해 현재 날씨를 한 건 조회한다.
+ * 카드용 요약 필드와 상세 화면에서 사용할 원본 응답(detail)을 함께 반환한다.
+ */
 const requestCurrentWeather = async (city) => {
   const hasCoordinates = Number.isFinite(city.lat) && Number.isFinite(city.lon)
+
+  // 같은 이름의 도시가 있을 수 있으므로 좌표가 있으면 이름보다 좌표를 우선한다.
   const locationParams = hasCoordinates ? { lat: city.lat, lon: city.lon } : { q: `${city.name},${city.country ?? 'KR'}` }
 
   const { data } = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
@@ -88,6 +111,10 @@ const requestCurrentWeather = async (city) => {
   }
 }
 
+/**
+ * 기본 도시와 사용자 추가 도시의 현재 날씨를 불러온다.
+ * 강제 갱신이 아니면 캐시를 먼저 사용하고, 요청이 필요할 때는 Promise.all로 병렬 조회한다.
+ */
 export const getWeatherList = async ({ forceRefresh = false } = {}) => {
   const cachedWeather = forceRefresh ? null : getWeatherCacheInfo()
 
@@ -104,6 +131,10 @@ export const getWeatherList = async ({ forceRefresh = false } = {}) => {
   return weatherList
 }
 
+/**
+ * 입력한 도시명을 Geocoding API로 검색한다.
+ * 동명 도시를 구분할 수 있도록 국가, 지역, 좌표를 포함한 후보를 최대 5개 반환한다.
+ */
 export const searchCities = async (query) => {
   const { data } = await axios.get('https://api.openweathermap.org/geo/1.0/direct', {
     params: {
@@ -125,8 +156,13 @@ export const searchCities = async (query) => {
   }))
 }
 
+// 현재 위치와 검색 결과 모두 같은 현재 날씨 요청 함수를 재사용한다.
 export const getWeatherByLocation = (location) => requestCurrentWeather(location)
 
+/**
+ * 사용자가 선택한 도시의 식별 정보만 저장한다.
+ * 날씨 값은 시간이 지나면 바뀌므로 목록을 다시 불러올 때 API에서 새로 조회한다.
+ */
 export const saveCustomCity = (city) => {
   const customCities = getCustomCities()
   const customCity = {
@@ -148,8 +184,13 @@ export const saveCustomCity = (city) => {
   return customCity
 }
 
+// 도시별 예보 캐시가 서로 덮어쓰지 않도록 cityId를 키에 포함한다.
 const getForecastCacheKey = (cityId) => `${FORECAST_CACHE_PREFIX}-${cityId}`
 
+/**
+ * 선택한 도시의 시간대별·5일 예보 캐시를 확인한다.
+ * 현재 날씨 캐시와 동일하게 한 시간이 지나면 제거한다.
+ */
 const getCachedForecast = (cityId) => {
   const cacheKey = getForecastCacheKey(cityId)
 
@@ -170,6 +211,10 @@ const getCachedForecast = (cityId) => {
   }
 }
 
+/**
+ * OpenWeather의 5 Day / 3 Hour Forecast API를 한 번 호출한다.
+ * 앞 24시간은 시간대별 예보로, 전체 응답은 날짜별 최고·최저 예보로 가공한다.
+ */
 export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
   const cachedForecast = getCachedForecast(cityId)
 
@@ -188,7 +233,10 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
   })
   // console.log(data.list)
 
+  // API 시각은 UTC이므로 도시의 timezone 값을 더해 현지 날짜를 계산한다.
   const timezoneOffset = data.city?.timezone ?? 0
+
+  // 3시간 간격 8개 구간은 약 24시간의 시간대별 예보가 된다.
   const hourlyForecast = data.list.slice(0, 8).map((item) => ({
     timestamp: item.dt,
     temp: Math.round(item.main.temp),
@@ -199,6 +247,7 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
   }))
   // console.log(hourlyForecast)
 
+  // 3시간 단위 응답을 도시 현지 날짜를 기준으로 묶는다.
   const dailyForecasts = data.list.reduce((days, item) => {
     const localDate = new Date((item.dt + timezoneOffset) * 1000).toISOString().slice(0, 10)
     const localHour = new Date((item.dt + timezoneOffset) * 1000).getUTCHours()
@@ -224,6 +273,7 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
     day.tempMin = Math.min(day.tempMin, item.main.temp_min)
     day.precipitationProbability = Math.max(day.precipitationProbability, Math.round((item.pop ?? 0) * 100))
 
+    // 하루를 대표하는 날씨 설명과 아이콘은 정오에 가장 가까운 구간을 사용한다.
     if (noonDistance < day.noonDistance) {
       day.weatherDescription = weather?.description ?? '날씨 정보 없음'
       day.weatherIcon = weather?.icon ?? ''
@@ -244,6 +294,8 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
       weatherDescription: day.weatherDescription,
       weatherIcon: day.weatherIcon,
     }))
+
+  // 같은 API 응답으로 만든 두 예보를 함께 저장해 추가 요청 없이 재사용한다.
   const forecastData = {
     daily: forecast,
     hourly: hourlyForecast,

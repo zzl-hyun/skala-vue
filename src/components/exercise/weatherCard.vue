@@ -55,6 +55,11 @@
 import { useConfigStore } from '@/stores/configStore'
 import { computed } from 'vue'
 import CountUp from './CountUp.vue'
+
+/**
+ * 도시 한 곳의 현재 날씨를 표시하는 표현용 컴포넌트
+ * 데이터는 props로 받고 카드 선택, 즐겨찾기, 상세 이동 요청은 부모로 emit한다.
+ */
 const props = defineProps({
   cityItem: {
     type: Object,
@@ -72,8 +77,14 @@ const props = defineProps({
 // console.log(props.cityItem)
 const emit = defineEmits(['select-card', 'toggle-favorite', 'click-detail'])
 const configStore = useConfigStore()
+
+// API 원본 온도는 바꾸지 않고 전역 단위 설정에 맞는 표시값만 계산한다.
 const displayedTemperature = computed(() => configStore.convertTemp(props.cityItem.temp))
+
+// OpenWeather가 내려 준 아이콘 코드로 공식 날씨 이미지를 구성한다.
 const weatherIcon = computed(() => `https://openweathermap.org/img/wn/${props.cityItem.detail?.weather?.[0]?.icon}@2x.png`)
+
+// 한글 도시명이 따로 있으면 영문명과 날씨 상태를 보조 설명으로 묶는다.
 const citySubtitle = computed(() => {
   const subtitle = []
 

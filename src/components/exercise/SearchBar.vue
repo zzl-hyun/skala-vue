@@ -41,7 +41,10 @@
 import { computed, ref } from 'vue'
 import { searchCities } from '@/api/weatherApi'
 
-// - 부모로 부터 검색도시 반응형 데이터를 전달받아 표시 (props)
+/**
+ * 도시 목록 필터와 새 도시 검색을 하나의 입력창에서 처리한다.
+ * 입력값은 부모가 관리하고, 변경·도시 추가·현재 위치 요청은 emit으로 전달한다.
+ */
 const props = defineProps({
   curQuery: {
     type: String,
@@ -98,6 +101,7 @@ const handleCitySearch = async () => {
   }
 
   if (query.includes(',')) {
+    // 쉼표 검색은 여러 기존 도시를 필터링하는 기능이므로 도시 추가 검색에서는 제외한다.
     searchResults.value = []
     searchStatus.value = 'multiple'
     return

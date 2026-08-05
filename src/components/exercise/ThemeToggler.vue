@@ -8,6 +8,7 @@
 import { computed } from 'vue'
 import { useConfigStore } from '@/stores/configStore'
 
+// Pinia가 가진 전역 테마 상태를 읽고, 버튼은 상태 전환만 요청한다.
 const configStore = useConfigStore()
 // console.log(configStore.theme)
 const buttonLabel = computed(() => (configStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'))

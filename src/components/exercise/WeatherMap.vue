@@ -26,6 +26,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 
+// Windy Embed에서 지원하는 overlay 값과 화면에 보여 줄 이름을 한곳에서 관리한다.
 const windyCategories = [
   { label: '기온', overlay: 'temp' },
   { label: '강수', overlay: 'rain' },
@@ -38,6 +39,7 @@ const windyCategories = [
 
 const selectedOverlay = ref('temp')
 
+// 선택한 레이어가 바뀔 때 iframe 주소와 key가 함께 변경되어 지도가 새로 표시된다.
 const windyEmbedUrl = computed(
   () =>
     `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=m/s&zoom=7&overlay=${selectedOverlay.value}&product=ecmwf&level=surface&lat=36.385&lon=127.979&pressure=true&message=true`,

@@ -2,6 +2,10 @@
 import { getWeatherList } from '@/api/weatherApi'
 import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 
+/**
+ * 컴포넌트 분리 전 단계에서 API 호출, 검색, 필터, watch를 연습한 초기 날씨 화면
+ * 현재 대시보드와 비교하면서 Vue의 반응형 처리 흐름을 확인하기 위해 남겨 둔다.
+ */
 // const degree = () =>{
 //  return (Math.round(Math.random()*100)) % 40;
 // }
@@ -42,6 +46,7 @@ watch(selectedCityInfo, (newValue) => {
 
 const temperatureFilter = ref('all')
 
+// 원본 배열은 유지하고 온도 조건과 검색어가 바뀔 때 화면용 목록만 다시 계산한다.
 const filteredWeatherList = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase()
   let result = weatherList.value

@@ -8,6 +8,7 @@
 <script setup>
 import { useConfigStore } from '@/stores/configStore'
 
+// 단위 상태를 Pinia에서 관리해 카드와 상세 화면이 함께 변경되도록 한다.
 const configStore = useConfigStore()
 // console.log(configStore.unit)
 </script>

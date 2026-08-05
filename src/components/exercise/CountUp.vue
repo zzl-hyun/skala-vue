@@ -5,6 +5,11 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 
+/**
+ * Vue Bits의 Count Up 예제를 현재 프로젝트에 맞게 구성한 숫자 애니메이션 컴포넌트
+ * 목표 숫자를 props로 받아 spring 방식으로 자연스럽게 증가하거나 감소시킨다.
+ * @see https://vue-bits.dev/text-animations/count-up
+ */
 const props = defineProps({
   to: {
     type: Number,
@@ -126,6 +131,7 @@ const startAnimation = () => {
 const setupIntersectionObserver = () => {
   if (!elementRef.value) return
 
+  // 화면에 보이는 시점부터 애니메이션을 시작해 불필요한 실행을 줄인다.
   intersectionObserver = new IntersectionObserver(
     ([entry]) => {
       if (entry.isIntersecting && !isInView.value) {
@@ -151,6 +157,7 @@ const cleanupAnimation = () => {
 watch(
   [() => props.from, () => props.to, () => props.direction],
   () => {
+    // 온도 단위 변경처럼 목표값이 바뀌면 이전 동작을 정리하고 다시 시작한다.
     cleanupAnimation()
     currentValue.value = props.direction === 'down' ? props.to : props.from
     updateDisplay()

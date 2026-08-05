@@ -36,6 +36,7 @@
           <small v-if="warning.effectiveAt">발효 {{ formatWarningTime(warning.effectiveAt) }}</small>
         </li>
       </ul>
+      <small style="font-size:10px;">데이터 제공: 기상청</small>
     </section>
 
     <div class="summary-grid">

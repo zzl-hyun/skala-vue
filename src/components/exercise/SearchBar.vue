@@ -35,6 +35,8 @@
       </li>
     </ul>
   </section>
+      <small style="font-size: 11px;">데이터 제공: KAKAO</small>
+
 </template>
 
 <script setup>

@@ -56,6 +56,7 @@
             :is-favorite="isFavorite(item.id)"
             @select-card="selectCity"
             @toggle-favorite="toggleFavorite"
+            @remove-city="removeCity"
             @click-detail="showDetail"
           >
           </WeatherCard>
@@ -78,7 +79,7 @@ import BaseDashboardCard from './BaseDashboardCard.vue'
 import SearchBar from './SearchBar.vue'
 import WeatherCard from './weatherCard.vue'
 import WeatherMap from './WeatherMap.vue'
-import { getWeatherByLocation, getWeatherCacheInfo, getWeatherList, saveCustomCity, saveWeatherListCache } from '@/api/weatherApi'
+import { getWeatherByLocation, getWeatherCacheInfo, getWeatherList, removeWeatherCity, saveCustomCity, saveWeatherListCache } from '@/api/weatherApi'
 import { getKmaWarnings, getWarningsForCity } from '@/api/kmaWarningApi'
 import { useRoute, useRouter } from 'vue-router'
 import { useFavoriteCities } from '@/composables/useFavoriteCities'
@@ -210,7 +211,7 @@ const sortOptions = [
   { label: '풍속순', value: 'wind' },
 ]
 const favoriteOnly = ref(false)
-const { favoriteIds, isFavorite, toggleFavorite } = useFavoriteCities()
+const { favoriteIds, isFavorite, toggleFavorite, removeFavorite } = useFavoriteCities()
 const favoriteCount = computed(() => favoriteIds.value.length)
 
 // 콜백 기반 Geolocation API를 async/await로 다루기 위해 Promise로 감싼다.
@@ -275,6 +276,7 @@ const addCity = async (location) => {
     const existingCity = weatherList.value.find((item) => String(item.detail?.id) === String(newCity.detail.id))
     const newCityWithWarnings = {
       ...newCity,
+      isCustom: true,
       warnings: getWarningsForCity(newCity, kmaWarnings.value),
     }
     const targetCity = existingCity ?? newCityWithWarnings
@@ -386,6 +388,24 @@ watch(selectedCityInfo, (newValue) => {
 })
 const selectCity = (city) => {
   selectedCityInfo.value = `${city.name_kr ?? city.name}이(가) 선택되었습니다.`
+}
+
+const removeCity = (city) => {
+  removeFavorite(city.id)
+
+  if (city.isCurrentLocation) {
+    currentLocationCity.value = null
+    selectedCityInfo.value = '현재 위치 도시를 목록에서 삭제했습니다.'
+    return
+  }
+
+  removeWeatherCity(city)
+  weatherList.value = weatherList.value.filter((item) => String(item.id) !== String(city.id))
+
+  const cacheInfo = saveWeatherListCache(weatherList.value)
+  cacheExpiresAt.value = cacheInfo.expiresAt
+  currentTime.value = Date.now()
+  selectedCityInfo.value = `${city.name_kr ?? city.name}을(를) 목록에서 삭제했습니다.`
 }
 
 const showDetail = (city) => {

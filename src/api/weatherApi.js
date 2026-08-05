@@ -13,6 +13,7 @@ const CACHE_KEY = 'weather-list'
 const CACHE_DURATION = 60 * 60 * 1000
 const FORECAST_CACHE_PREFIX = 'five-day-forecast-v2'
 const CUSTOM_CITIES_KEY = 'weather-custom-cities'
+const HIDDEN_CITIES_KEY = 'weather-hidden-city-ids'
 
 /**
  * 현재 날씨 캐시의 구조와 만료 시간을 확인한다.
@@ -69,11 +70,34 @@ const getCustomCities = () => {
   try {
     const customCities = JSON.parse(localStorage.getItem(CUSTOM_CITIES_KEY))
 
-    return Array.isArray(customCities) ? customCities : []
+    return Array.isArray(customCities) ? customCities.map((city) => ({ ...city, isCustom: true })) : []
   } catch {
     localStorage.removeItem(CUSTOM_CITIES_KEY)
     return []
   }
+}
+
+const markCustomCities = (weatherItems) => {
+  const customCityIds = new Set(getCustomCities().map((city) => String(city.id)))
+
+  return weatherItems.map((city) => (customCityIds.has(String(city.id)) ? { ...city, isCustom: true } : city))
+}
+
+const getHiddenCityIds = () => {
+  try {
+    const hiddenCityIds = JSON.parse(localStorage.getItem(HIDDEN_CITIES_KEY))
+
+    return Array.isArray(hiddenCityIds) ? hiddenCityIds.map(String) : []
+  } catch {
+    localStorage.removeItem(HIDDEN_CITIES_KEY)
+    return []
+  }
+}
+
+const excludeHiddenCities = (cityItems) => {
+  const hiddenCityIds = new Set(getHiddenCityIds())
+
+  return cityItems.filter((city) => !hiddenCityIds.has(String(city.id)))
 }
 
 /**
@@ -119,10 +143,10 @@ export const getWeatherList = async ({ forceRefresh = false } = {}) => {
   const cachedWeather = forceRefresh ? null : getWeatherCacheInfo()
 
   if (cachedWeather) {
-    return cachedWeather.weatherList
+    return markCustomCities(excludeHiddenCities(cachedWeather.weatherList))
   }
 
-  const allCities = [...cities, ...getCustomCities()]
+  const allCities = excludeHiddenCities([...cities, ...getCustomCities()])
   const weatherList = await Promise.all(allCities.map(requestCurrentWeather))
   // console.log(weatherList)
 
@@ -181,6 +205,7 @@ export const saveCustomCity = (city) => {
     country: city.detail.sys.country,
     lat: city.detail.coord.lat,
     lon: city.detail.coord.lon,
+    isCustom: true,
   }
 
   const isSaved = customCities.some((savedCity) => String(savedCity.id) === customCity.id)
@@ -190,6 +215,23 @@ export const saveCustomCity = (city) => {
   }
 
   return customCity
+}
+
+/** 도시 종류에 따라 사용자 추가 목록에서 제거하거나 기본 목록에서 숨긴다. */
+export const removeWeatherCity = (city) => {
+  if (city.isCustom) {
+    const remainingCities = getCustomCities().filter((item) => String(item.id) !== String(city.id))
+
+    localStorage.setItem(CUSTOM_CITIES_KEY, JSON.stringify(remainingCities))
+    return
+  }
+
+  const hiddenCityIds = getHiddenCityIds()
+  const normalizedId = String(city.id)
+
+  if (!hiddenCityIds.includes(normalizedId)) {
+    localStorage.setItem(HIDDEN_CITIES_KEY, JSON.stringify([...hiddenCityIds, normalizedId]))
+  }
 }
 
 // 도시별 예보 캐시가 서로 덮어쓰지 않도록 cityId를 키에 포함한다.

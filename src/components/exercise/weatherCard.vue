@@ -5,19 +5,33 @@
         <h3>{{ cityItem.name_kr ?? cityItem.name }}</h3>
         <p>{{ citySubtitle }}</p>
       </div>
-      <UButton
-        type="button"
-        :color="isFavorite ? 'warning' : 'neutral'"
-        variant="ghost"
-        size="sm"
-        square
-        class="favorite-button"
-        :aria-pressed="isFavorite"
-        :aria-label="isFavorite ? `${cityItem.name} 즐겨찾기 해제` : `${cityItem.name} 즐겨찾기 추가`"
-        @click.stop="emit('toggle-favorite', cityItem.id)"
-      >
-        {{ isFavorite ? '★' : '☆' }}
-      </UButton>
+      <div class="card-actions">
+        <UButton
+          type="button"
+          :color="isFavorite ? 'warning' : 'neutral'"
+          variant="ghost"
+          size="sm"
+          square
+          class="favorite-button"
+          :aria-pressed="isFavorite"
+          :aria-label="isFavorite ? `${cityItem.name} 즐겨찾기 해제` : `${cityItem.name} 즐겨찾기 추가`"
+          @click.stop="emit('toggle-favorite', cityItem.id)"
+        >
+          {{ isFavorite ? '★' : '☆' }}
+        </UButton>
+        <UButton
+          type="button"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          square
+          class="remove-button"
+          :aria-label="`${cityItem.name_kr ?? cityItem.name} 삭제`"
+          @click.stop="emit('remove-city', cityItem)"
+        >
+          ×
+        </UButton>
+      </div>
     </header>
 
     <div class="weather-main">
@@ -75,7 +89,7 @@ const props = defineProps({
   },
 })
 // console.log(props.cityItem)
-const emit = defineEmits(['select-card', 'toggle-favorite', 'click-detail'])
+const emit = defineEmits(['select-card', 'toggle-favorite', 'remove-city', 'click-detail'])
 const configStore = useConfigStore()
 
 // API 원본 온도는 바꾸지 않고 전역 단위 설정에 맞는 표시값만 계산한다.
@@ -240,6 +254,18 @@ const citySubtitle = computed(() => {
 
 .favorite-button {
   font-size: 17px;
+  line-height: 1;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.remove-button {
+  color: var(--color-text-soft);
+  font-size: 18px;
   line-height: 1;
 }
 

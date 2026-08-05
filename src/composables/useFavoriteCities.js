@@ -24,6 +24,11 @@ export const useFavoriteCities = () => {
     favoriteIds.value = isFavorite(normalizedId) ? favoriteIds.value.filter((id) => id !== normalizedId) : [...favoriteIds.value, normalizedId]
   }
 
+  const removeFavorite = (cityId) => {
+    const normalizedId = String(cityId)
+    favoriteIds.value = favoriteIds.value.filter((id) => id !== normalizedId)
+  }
+
   watch(
     favoriteIds,
     (ids) => {
@@ -37,5 +42,6 @@ export const useFavoriteCities = () => {
     favoriteIds,
     isFavorite,
     toggleFavorite,
+    removeFavorite,
   }
 }

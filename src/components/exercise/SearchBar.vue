@@ -1,0 +1,221 @@
+<template>
+  <section class="search-child" aria-labelledby="city-search-title">
+    <div class="search-heading">
+      <h3 id="city-search-title">🔍 검색</h3>
+      <p>지역을 검색하거나 현재 위치 날씨를 확인할 수 있습니다.</p>
+    </div>
+
+    <form class="search-row" @submit.prevent="handleCitySearch">
+      <UInput class="search-input" :model-value="curQuery" size="lg" placeholder="지역 이름 입력" aria-label="도시 검색" @update:model-value="sendCurQuery">
+        <template v-if="curQuery" #trailing>
+          <UButton type="button" color="neutral" variant="link" size="xs" aria-label="검색어 지우기" @click="clearQuery"> 지우기 </UButton>
+        </template>
+      </UInput>
+
+      <div class="search-actions">
+        <UButton type="button" color="neutral" variant="soft" :loading="locating" :disabled="adding || searchStatus === 'loading'" @click="requestCurrentLocation"> ◎ 내 위치 </UButton>
+
+        <UButton type="submit" color="neutral" variant="outline" :loading="searchStatus === 'loading'" :disabled="locating"> 지역 찾기 </UButton>
+      </div>
+    </form>
+
+    <p v-if="searchMessage" class="search-message" aria-live="polite">
+      {{ searchMessage }}
+    </p>
+
+    <ul v-if="searchResults.length" class="search-results">
+      <li v-for="city in searchResults" :key="city.key">
+        <div>
+          <strong>{{ city.name_kr }}</strong>
+          <span>
+            {{ [city.state, city.country].filter(Boolean).join(' · ') }}
+          </span>
+        </div>
+        <UButton type="button" color="neutral" variant="outline" size="xs" :disabled="adding || locating" @click="emit('add-city', city)"> 목록에 추가 </UButton>
+      </li>
+    </ul>
+  </section>
+      <small style="font-size: 11px;">데이터 제공: KAKAO</small>
+
+</template>
+
+<script setup>
+import { computed, ref } from 'vue'
+import { searchCities } from '@/api/weatherApi'
+
+/**
+ * 도시 목록 필터와 새 도시 검색을 하나의 입력창에서 처리한다.
+ * 입력값은 부모가 관리하고, 변경·도시 추가·현재 위치 요청은 emit으로 전달한다.
+ */
+const props = defineProps({
+  curQuery: {
+    type: String,
+    default: '',
+  },
+  adding: {
+    type: Boolean,
+    default: false,
+  },
+  locating: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const emit = defineEmits(['update-query', 'add-city', 'request-location'])
+const searchResults = ref([])
+const searchStatus = ref('idle')
+
+const searchMessage = computed(() => {
+  if (searchStatus.value === 'multiple') return '도시 추가 검색은 이름 하나만 입력해 주세요.'
+  if (searchStatus.value === 'error') return '도시 검색에 실패했습니다.'
+  if (searchStatus.value === 'empty') return '추가할 도시를 찾지 못했습니다.'
+  return ''
+})
+
+const resetCandidates = () => {
+  searchResults.value = []
+  searchStatus.value = 'idle'
+}
+
+const sendCurQuery = (value) => {
+  resetCandidates()
+  emit('update-query', value)
+}
+
+const clearQuery = () => {
+  resetCandidates()
+  emit('update-query', '')
+}
+
+const requestCurrentLocation = () => {
+  resetCandidates()
+  emit('request-location')
+}
+
+const handleCitySearch = async () => {
+  const query = props.curQuery.trim()
+
+  if (!query) {
+    searchResults.value = []
+    searchStatus.value = 'empty'
+    return
+  }
+
+  if (query.includes(',')) {
+    // 쉼표 검색은 여러 기존 도시를 필터링하는 기능이므로 도시 추가 검색에서는 제외한다.
+    searchResults.value = []
+    searchStatus.value = 'multiple'
+    return
+  }
+
+  searchStatus.value = 'loading'
+
+  try {
+    searchResults.value = await searchCities(query)
+    // console.log(searchResults.value)
+    searchStatus.value = searchResults.value.length ? 'success' : 'empty'
+  } catch (error) {
+    console.error(error)
+    searchResults.value = []
+    searchStatus.value = 'error'
+  }
+}
+</script>
+
+<style scoped>
+.search-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+
+.search-heading h3 {
+  margin: 0;
+  color: var(--color-heading);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.search-heading p {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 11px;
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+}
+
+.search-input {
+  flex: 1;
+}
+
+.search-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.search-message {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.search-results {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-results li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  background: var(--color-background-mute);
+}
+
+.search-results li div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.search-results strong {
+  color: var(--color-heading);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.search-results span {
+  overflow: hidden;
+  color: var(--color-text-soft);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .search-heading {
+    display: block;
+  }
+
+  .search-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+</style>

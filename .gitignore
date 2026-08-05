@@ -37,3 +37,7 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+/public/kma-warnings.json
+
+.env
+/old/

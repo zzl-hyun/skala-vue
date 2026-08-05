@@ -1,5 +1,21 @@
 <template>
-  <section v-if="detail" class="detail-page">
+  <section v-if="isLoading" class="empty-state">
+    <p>상세 정보를 불러오는 중입니다.</p>
+  </section>
+
+  <section v-else-if="detail" class="detail-page">
+    <UButton
+      type="button"
+      color="neutral"
+      variant="soft"
+      size="sm"
+      square
+      class="modal-close"
+      aria-label="상세 닫기"
+      @click="closeDetail">
+      ×
+    </UButton>
+
     <header class="weather-hero">
       <div>
         <p class="location">📍 {{ city.name_kr ?? detail.name }}, {{ detail.sys.country }}</p>
@@ -31,6 +47,46 @@
         <strong>{{ detail.clouds.all }}%</strong>
       </article>
     </div>
+
+    <section class="forecast-section" aria-labelledby="weekly-forecast-title">
+      <h3 id="weekly-forecast-title">7일 예보</h3>
+
+      <p v-if="forecastStatus === 'loading'" class="forecast-status" aria-live="polite">
+        주간 예보를 불러오는 중입니다.
+      </p>
+      <p v-else-if="forecastStatus === 'error'" class="forecast-status forecast-status--error">
+        주간 예보를 불러오지 못했습니다.
+      </p>
+
+      <div v-else class="forecast-grid">
+        <article
+          v-for="day in weeklyForecast"
+          :key="day.date"
+          class="forecast-day">
+          <time :datetime="day.date">{{ formatForecastDate(day.date) }}</time>
+          <span class="forecast-icon" aria-hidden="true">
+            {{ getForecastCondition(day.weatherCode).icon }}
+          </span>
+          <span class="forecast-condition">
+            {{ getForecastCondition(day.weatherCode).label }}
+          </span>
+          <strong>
+            {{ configStore.formatTemp(day.tempMax) }}
+            <span>{{ configStore.formatTemp(day.tempMin) }}</span>
+          </strong>
+          <small>강수 {{ day.precipitationProbability }}%</small>
+        </article>
+      </div>
+
+      <a
+        v-if="forecastStatus === 'success'"
+        class="forecast-source"
+        href="https://open-meteo.com/"
+        target="_blank"
+        rel="noopener">
+        예보 데이터: Open-Meteo
+      </a>
+    </section>
 
     <div class="details-card">
       <h3>상세 관측 정보</h3>
@@ -66,28 +122,99 @@
       </dl>
     </div>
 
-    <RouterLink to="/" class="btn-home">← 대시보드 홈으로 이동</RouterLink>
   </section>
 
   <section v-else class="empty-state">
     <p>도시 상세 정보를 불러올 수 없습니다.</p>
-    <RouterLink to="/" class="btn-home">대시보드 홈으로 이동</RouterLink>
+    <UButton type="button" color="primary" @click="closeDetail">대시보드로 돌아가기</UButton>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getWeatherList, getWeeklyForecast } from '@/api/weatherApi'
 import { useConfigStore } from '@/stores/configStore'
+
 const configStore = useConfigStore();
-const city = window.history.state?.city ?? null
-const detail = city?.detail ?? null
+const route = useRoute();
+const router = useRouter();
+const city = ref(null);
+const isLoading = ref(true);
+const weeklyForecast = ref([]);
+const forecastStatus = ref('loading');
+
+const loadWeeklyForecast = async (currentCity) => {
+  const requestedCityId = String(currentCity.id);
+  const { lat, lon } = currentCity.detail.coord;
+
+  forecastStatus.value = 'loading';
+
+  try {
+    const forecast = await getWeeklyForecast({
+      cityId: requestedCityId,
+      latitude: lat,
+      longitude: lon,
+    });
+
+    if (String(city.value?.id) !== requestedCityId) return;
+
+    weeklyForecast.value = forecast;
+    forecastStatus.value = 'success';
+  } catch (error) {
+    console.error(error);
+
+    if (String(city.value?.id) !== requestedCityId) return;
+
+    weeklyForecast.value = [];
+    forecastStatus.value = 'error';
+  }
+};
+
+const loadCity = async () => {
+  isLoading.value = true;
+  weeklyForecast.value = [];
+  forecastStatus.value = 'loading';
+
+  const routedCity = window.history.state?.city;
+  if (
+    routedCity &&
+    String(routedCity.id) === String(route.params.cityId) &&
+    routedCity.detail
+  ) {
+    city.value = routedCity;
+    isLoading.value = false;
+    loadWeeklyForecast(routedCity);
+    return;
+  }
+
+  try {
+    const weatherList = await getWeatherList();
+    city.value = weatherList.find(
+      (item) => String(item.id) === String(route.params.cityId),
+    ) ?? null;
+  } catch (error) {
+    console.error(error);
+    city.value = null;
+  } finally {
+    isLoading.value = false;
+  }
+
+  if (city.value?.detail?.coord) {
+    loadWeeklyForecast(city.value);
+  }
+};
+
+watch(() => route.params.cityId, loadCity, { immediate: true });
+
+const detail = computed(() => city.value?.detail ?? null);
 
 const weatherIcon = computed(() =>
-  `https://openweathermap.org/img/wn/${detail?.weather?.[0]?.icon}@2x.png`,
+  `https://openweathermap.org/img/wn/${detail.value?.weather?.[0]?.icon}@2x.png`,
 )
 
 const formatTime = (timestamp) => {
-  const localTimestamp = (timestamp + detail.timezone) * 1000
+  const localTimestamp = (timestamp + (detail.value?.timezone ?? 0)) * 1000
 
   return new Date(localTimestamp).toLocaleTimeString('ko-KR', {
     timeZone: 'UTC',
@@ -95,24 +222,57 @@ const formatTime = (timestamp) => {
     minute: '2-digit',
   })
 }
+
+const formatForecastDate = (date) =>
+  new Intl.DateTimeFormat('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
+  }).format(new Date(`${date}T00:00:00`))
+
+const getForecastCondition = (code) => {
+  if (code === 0) return { icon: '☀️', label: '맑음' }
+  if ([1, 2].includes(code)) return { icon: '🌤️', label: '구름 조금' }
+  if (code === 3) return { icon: '☁️', label: '흐림' }
+  if ([45, 48].includes(code)) return { icon: '🌫️', label: '안개' }
+  if ([51, 53, 55, 56, 57].includes(code)) return { icon: '🌦️', label: '이슬비' }
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) {
+    return { icon: '🌧️', label: '비' }
+  }
+  if ([71, 73, 75, 77, 85, 86].includes(code)) {
+    return { icon: '🌨️', label: '눈' }
+  }
+  if ([95, 96, 99].includes(code)) return { icon: '⛈️', label: '뇌우' }
+
+  return { icon: '🌥️', label: '날씨 변화' }
+}
+
+const closeDetail = () => {
+  router.push({ name: 'weather', query: route.query });
+};
 </script>
 
 <style scoped>
 .detail-page,
 .empty-state {
-  margin: 28px auto 0;
-  color: #334155;
+  margin: 0;
+  color: #374151;
+}
+
+.detail-page {
+  position: relative;
+  padding: 22px;
 }
 
 .weather-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
-  color: #fff;
+  padding: 20px 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  background: #f8fafc;
+  color: #111827;
 }
 
 .location,
@@ -120,14 +280,21 @@ const formatTime = (timestamp) => {
   margin: 0;
 }
 
+.location {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .weather-hero h2 {
-  margin: 6px 0;
-  font-size: 25px;
+  margin: 4px 0;
+  font-size: 23px;
+  font-weight: 700;
 }
 
 .updated-at {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
+  color: #9ca3af;
+  font-size: 12px;
 }
 
 .temperature {
@@ -136,47 +303,134 @@ const formatTime = (timestamp) => {
 }
 
 .temperature img {
-  width: 72px;
-  height: 72px;
+  width: 58px;
+  height: 58px;
 }
 
 .temperature strong {
-  font-size: 44px;
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -0.04em;
 }
 
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin: 14px 0;
+  gap: 8px;
+  margin: 12px 0;
 }
 
 .summary-card {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 14px 10px;
+  gap: 6px;
+  min-height: 76px;
+  padding: 12px 8px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 9px;
   background: #fff;
   text-align: center;
 }
 
 .summary-card span {
   color: #64748b;
+  font-size: 12px;
+}
+
+.summary-card strong {
+  color: #111827;
+  font-size: 18px;
+}
+
+.forecast-section {
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.forecast-section h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.forecast-status {
+  margin: 0;
+  padding: 14px 0;
+  color: #64748b;
+  text-align: center;
+}
+
+.forecast-status--error {
+  color: #b91c1c;
+}
+
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(84px, 1fr));
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.forecast-day {
+  display: flex;
+  min-width: 84px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 5px;
+  border-radius: 8px;
+  border: 1px solid #eef0f2;
+  background: #fafafa;
+  text-align: center;
+}
+
+.forecast-day time,
+.forecast-day small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.forecast-icon {
+  font-size: 23px;
+}
+
+.forecast-condition {
+  min-height: 32px;
+  color: #475569;
+  font-size: 11px;
+}
+
+.forecast-day strong {
   font-size: 13px;
 }
 
+.forecast-day strong span {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.forecast-source {
+  display: block;
+  width: fit-content;
+  margin: 6px 0 0 auto;
+  color: #94a3b8;
+  font-size: 10px;
+}
+
 .details-card {
-  padding: 20px;
+  padding: 18px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  background: #f8fafc;
+  background: #fff;
 }
 
 .details-card h3 {
   margin: 0 0 12px;
-  font-size: 17px;
+  color: #111827;
+  font-size: 16px;
 }
 
 .details-card dl {
@@ -190,7 +444,7 @@ const formatTime = (timestamp) => {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 0;
+  padding: 9px 0;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -204,13 +458,40 @@ const formatTime = (timestamp) => {
   text-align: right;
 }
 
+.modal-close {
+  position: absolute;
+  z-index: 1;
+  top: 31px;
+  right: 31px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0 0 3px;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
 .btn-home {
   display: block;
   margin-top: 15px;
   padding: 11px 16px;
+  border: 0;
   border-radius: 5px;
   background: #0ea5e9;
   color: #fff;
+  cursor: pointer;
   font-weight: 700;
   text-align: center;
   text-decoration: none;
@@ -228,13 +509,24 @@ const formatTime = (timestamp) => {
 }
 
 @media (max-width: 560px) {
-  .summary-grid,
-  .details-card dl {
+  .summary-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .details-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-page {
+    padding: 12px;
   }
 
   .weather-hero {
     padding: 18px;
+  }
+
+  .weather-hero h2 {
+    font-size: 23px;
   }
 
   .temperature img {
@@ -244,6 +536,11 @@ const formatTime = (timestamp) => {
 
   .temperature strong {
     font-size: 34px;
+  }
+
+  .modal-close {
+    top: 27px;
+    right: 27px;
   }
 }
 </style>

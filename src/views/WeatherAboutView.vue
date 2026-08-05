@@ -7,9 +7,14 @@
                 <li><mark>components/exercise/</mark> 폴더 내부의 독립 부품 연동</li>
                 <li>클라이언트 사이드 라우팅을 통한 새로고침 없는 화면 전환</li>
                 <li>URL 쿼리 스트링 매핑을 활용한 실시간 검색 상태 동기화</li>
+                <li>즐겨찾기 도시를 localStorage에 저장하고 다시 불러오기</li>
+                <li>상세 라우트를 모달로 표시하고 배경 화면 스크롤 잠금 처리</li>
+                <li>도시별 7일 예보 조회 및 localStorage 캐싱</li>
+                <li>캐시 남은 시간 표시 및 최신 날씨 강제 갱신</li>
+                <li>하나의 검색창에서 도시 필터와 새 도시 추가</li>
             </ul>
         </BaseDashboardCard>
-        <RouterLink to="/" class="btn-home">대시보드 홈으로 이동</RouterLink>
+        <UButton to="/" color="neutral" class="btn-home">대시보드로 이동</UButton>
     </div>
 </template>
 
@@ -25,12 +30,13 @@ import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue';
 }
 
 .info {
-  margin: 0 0 24px;
-  padding: 0 2px 7px;
-  border-bottom: 2px solid #e5e7eb;
-  color: #334155;
+  display: flex;
+  align-items: center;
+  margin: 0 0 14px;
+  color: #111827;
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .about-card {
@@ -53,25 +59,13 @@ import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue';
 }
 
 .about-card mark {
-  padding: 1px 4px;
-  border-radius: 3px;
-  color: #ff5a3d;
-  background: #fff3b0;
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: #4b5563;
+  background: #f3f4f6;
 }
 
 .btn-home {
-  display: block;
-  padding: 10px 16px;
-  border-radius: 4px;
-  background: #0ea5e9;
-  color: white;
-  font-size: 15px;
-  font-weight: 700;
-  text-align: center;
-  text-decoration: none;
-}
-
-.btn-home:hover {
-  background: #0284c7;
+  margin-top: 14px;
 }
 </style>

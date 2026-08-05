@@ -1,118 +1,95 @@
 <template>
-    <div class="weather-card"
-        :class="cityItem.temp >= hotTemperature ? 'card-hot':'card-cool'"
-        @click="emit('select-card', cityItem)">
+  <div class="weather-card" :class="cityItem.temp >= hotTemperature ? 'card-hot' : 'card-cool'" @click="emit('select-card', cityItem)">
+    <header class="card-heading">
+      <div class="city-info">
+        <h3>{{ cityItem.name_kr ?? cityItem.name }}</h3>
+        <p>{{ citySubtitle }}</p>
+      </div>
+      <UButton
+        type="button"
+        :color="isFavorite ? 'warning' : 'neutral'"
+        variant="ghost"
+        size="sm"
+        square
+        class="favorite-button"
+        :aria-pressed="isFavorite"
+        :aria-label="isFavorite ? `${cityItem.name} 즐겨찾기 해제` : `${cityItem.name} 즐겨찾기 추가`"
+        @click.stop="emit('toggle-favorite', cityItem.id)"
+      >
+        {{ isFavorite ? '★' : '☆' }}
+      </UButton>
+    </header>
 
-        <header class="card-heading">
-          <div class="city-info">
-            <h3>{{ cityItem.name_kr ?? cityItem.name }}</h3>
-            <p>{{ citySubtitle }}</p>
-          </div>
-          <UButton
-            type="button"
-            :color="isFavorite ? 'warning' : 'neutral'"
-            variant="ghost"
-            size="sm"
-            square
-            class="favorite-button"
-            :aria-pressed="isFavorite"
-            :aria-label="isFavorite ? `${cityItem.name} 즐겨찾기 해제` : `${cityItem.name} 즐겨찾기 추가`"
-            @click.stop="emit('toggle-favorite', cityItem.id)">
-            {{ isFavorite ? '★' : '☆' }}
-          </UButton>
-        </header>
+    <div class="weather-main">
+      <div class="current-temperature">
+        <strong :aria-label="configStore.formatTemp(cityItem.temp)">
+          <span aria-hidden="true"> <CountUp :to="displayedTemperature" :duration="0.65" class-name="temperature-count" />{{ configStore.unitSymbol }} </span>
+        </strong>
+        <span class="current-temperature-label">현재 기온</span>
+      </div>
 
-        <div class="weather-main">
-          <div class="current-temperature">
-            <strong :aria-label="configStore.formatTemp(cityItem.temp)">
-              <span aria-hidden="true">
-                <CountUp
-                  :to="displayedTemperature"
-                  :duration="0.65"
-                  class-name="temperature-count" />{{ configStore.unitSymbol }}
-              </span>
-            </strong>
-            <span class="current-temperature-label">현재 기온</span>
-          </div>
-
-          <div class="weather-visual">
-            <img
-              v-if="cityItem.detail?.weather?.[0]?.icon"
-              class="weather-icon"
-              :src="weatherIcon"
-              :alt="cityItem.detail.weather[0].description">
-            <UBadge
-              :color="cityItem.temp >= hotTemperature ? 'error' : 'info'"
-              variant="soft"
-              size="sm">
-              {{ cityItem.temp >= hotTemperature ? '더움' : '선선함' }}
-            </UBadge>
-          </div>
-        </div>
-
-        <footer class="card-footer">
-          <div class="card-metrics">
-            <span>체감 <strong>{{ configStore.formatTemp(cityItem.main.feels_like) }}</strong></span>
-            <span>습도 <strong>{{ cityItem.main.humidity }}%</strong></span>
-          </div>
-
-          <UButton
-            type="button"
-            color="neutral"
-            variant="link"
-            size="sm"
-            class="detail-button"
-            @click.stop="emit('click-detail', cityItem)">
-            상세보기 →
-          </UButton>
-        </footer>
+      <div class="weather-visual">
+        <img v-if="cityItem.detail?.weather?.[0]?.icon" class="weather-icon" :src="weatherIcon" :alt="cityItem.detail.weather[0].description" />
+        <UBadge :color="cityItem.temp >= hotTemperature ? 'error' : 'info'" variant="soft" size="sm">
+          {{ cityItem.temp >= hotTemperature ? '더움' : '선선함' }}
+        </UBadge>
+      </div>
     </div>
+
+    <footer class="card-footer">
+      <div class="card-metrics">
+        <span
+          >체감 <strong>{{ configStore.formatTemp(cityItem.main.feels_like) }}</strong></span
+        >
+        <span
+          >습도 <strong>{{ cityItem.main.humidity }}%</strong></span
+        >
+      </div>
+
+      <UButton type="button" color="neutral" variant="link" size="sm" class="detail-button" @click.stop="emit('click-detail', cityItem)"> 상세보기 → </UButton>
+    </footer>
+  </div>
 </template>
 
 <script setup>
-  import { useConfigStore } from '@/stores/configStore';
-  import { computed } from 'vue';
-  import CountUp from './CountUp.vue';
-  const props = defineProps({
-      cityItem: {
-          type: Object,
-          required: true,
-      },
-      hotTemperature: {
-          type:Number,
-          required: true,
-      },
-      isFavorite: {
-          type: Boolean,
-          default: false,
-      }
-  })
-  // console.log(props.cityItem)
-  const emit = defineEmits(['select-card', 'toggle-favorite', 'click-detail'])
-  const configStore = useConfigStore();
-  const displayedTemperature = computed(() =>
-    configStore.convertTemp(props.cityItem.temp),
-  )
-  const weatherIcon = computed(() =>
-    `https://openweathermap.org/img/wn/${props.cityItem.detail?.weather?.[0]?.icon}@2x.png`,
-  )
-  const citySubtitle = computed(() => {
-    const subtitle = []
+import { useConfigStore } from '@/stores/configStore'
+import { computed } from 'vue'
+import CountUp from './CountUp.vue'
+const props = defineProps({
+  cityItem: {
+    type: Object,
+    required: true,
+  },
+  hotTemperature: {
+    type: Number,
+    required: true,
+  },
+  isFavorite: {
+    type: Boolean,
+    default: false,
+  },
+})
+// console.log(props.cityItem)
+const emit = defineEmits(['select-card', 'toggle-favorite', 'click-detail'])
+const configStore = useConfigStore()
+const displayedTemperature = computed(() => configStore.convertTemp(props.cityItem.temp))
+const weatherIcon = computed(() => `https://openweathermap.org/img/wn/${props.cityItem.detail?.weather?.[0]?.icon}@2x.png`)
+const citySubtitle = computed(() => {
+  const subtitle = []
 
-    if (props.cityItem.name_kr && props.cityItem.name_kr !== props.cityItem.name) {
-      subtitle.push(props.cityItem.name)
-    }
+  if (props.cityItem.name_kr && props.cityItem.name_kr !== props.cityItem.name) {
+    subtitle.push(props.cityItem.name)
+  }
 
-    if (props.cityItem.status) {
-      subtitle.push(props.cityItem.status)
-    }
+  if (props.cityItem.status) {
+    subtitle.push(props.cityItem.status)
+  }
 
-    return subtitle.join(' · ')
-  })
+  return subtitle.join(' · ')
+})
 </script>
 
 <style scoped>
-
 .weather-card {
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -124,7 +101,9 @@
   border-radius: 10px;
   background: var(--color-background-soft);
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .card-hot {

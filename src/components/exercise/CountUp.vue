@@ -3,14 +3,7 @@
 </template>
 
 <script setup>
-import {
-  computed,
-  onMounted,
-  onUnmounted,
-  ref,
-  useTemplateRef,
-  watch,
-} from 'vue'
+import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 
 const props = defineProps({
   to: {
@@ -76,9 +69,7 @@ const formatNumber = (value) => {
     maximumFractionDigits: 0,
   }).format(Number(value.toFixed(0)))
 
-  return props.separator
-    ? formattedNumber.replace(/,/g, props.separator)
-    : formattedNumber
+  return props.separator ? formattedNumber.replace(/,/g, props.separator) : formattedNumber
 }
 
 const updateDisplay = () => {

@@ -70,15 +70,19 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  cursor: url("bonobono-cursor.png") 0 0, auto;
-  transition: background-color 0.18s ease, color 0.18s ease;
+  cursor:
+    url('bonobono-cursor.png') 0 0,
+    auto;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 button,
 a {
   cursor: pointer;
 }
-.practice-section{
+.practice-section {
   border: 1px dotted black;
   margin-bottom: 10px;
 }

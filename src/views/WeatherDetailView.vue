@@ -4,17 +4,7 @@
   </section>
 
   <section v-else-if="detail" class="detail-page">
-    <UButton
-      type="button"
-      color="neutral"
-      variant="soft"
-      size="sm"
-      square
-      class="modal-close"
-      aria-label="상세 닫기"
-      @click="closeDetail">
-      ×
-    </UButton>
+    <UButton type="button" color="neutral" variant="soft" size="sm" square class="modal-close" aria-label="상세 닫기" @click="closeDetail"> × </UButton>
 
     <header class="weather-hero">
       <div>
@@ -26,12 +16,7 @@
       <div class="temperature">
         <img :src="weatherIcon" :alt="detail.weather[0].description" />
         <strong :aria-label="configStore.formatTemp(detail.main.temp)">
-          <span aria-hidden="true">
-            <CountUp
-              :to="displayedTemperature"
-              :duration="0.8"
-              class-name="temperature-count" />{{ configStore.unitSymbol }}
-          </span>
+          <span aria-hidden="true"> <CountUp :to="displayedTemperature" :duration="0.8" class-name="temperature-count" />{{ configStore.unitSymbol }} </span>
         </strong>
       </div>
     </header>
@@ -61,28 +46,16 @@
         <span>3시간 간격</span>
       </div>
 
-      <p v-if="forecastStatus === 'loading'" class="forecast-status" aria-live="polite">
-        예보를 불러오는 중입니다.
-      </p>
-      <p
-        v-else-if="forecastStatus === 'error'"
-        class="forecast-status forecast-status--error"
-        aria-live="polite">
+      <p v-if="forecastStatus === 'loading'" class="forecast-status" aria-live="polite">예보를 불러오는 중입니다.</p>
+      <p v-else-if="forecastStatus === 'error'" class="forecast-status forecast-status--error" aria-live="polite">
         {{ forecastErrorMessage }}
       </p>
 
       <template v-else>
         <div class="hourly-forecast" tabindex="0" aria-label="시간대별 날씨 예보">
-          <article
-            v-for="item in hourlyForecastItems"
-            :key="`${item.timestamp}-${item.timeLabel}`"
-            class="hourly-item">
+          <article v-for="item in hourlyForecastItems" :key="`${item.timestamp}-${item.timeLabel}`" class="hourly-item">
             <time :datetime="item.dateTime">{{ item.timeLabel }}</time>
-            <img
-              v-if="item.weatherIcon"
-              class="hourly-icon"
-              :src="getForecastIcon(item.weatherIcon)"
-              :alt="item.weatherDescription" />
+            <img v-if="item.weatherIcon" class="hourly-icon" :src="getForecastIcon(item.weatherIcon)" :alt="item.weatherDescription" />
             <strong>{{ configStore.formatTemp(item.temp) }}</strong>
             <small>강수 {{ item.precipitationProbability }}%</small>
             <small>풍속 {{ item.windSpeed }} m/s</small>
@@ -91,17 +64,9 @@
 
         <h3 id="five-day-forecast-title" class="five-day-heading">5일 예보</h3>
         <div class="forecast-grid" aria-labelledby="five-day-forecast-title">
-          <article
-            v-for="day in fiveDayForecast"
-            :key="day.date"
-            class="forecast-day">
+          <article v-for="day in fiveDayForecast" :key="day.date" class="forecast-day">
             <time :datetime="day.date">{{ formatForecastDate(day.date) }}</time>
-            <img
-              v-if="day.weatherIcon"
-              class="forecast-icon"
-              :src="getForecastIcon(day.weatherIcon)"
-              alt=""
-              aria-hidden="true" />
+            <img v-if="day.weatherIcon" class="forecast-icon" :src="getForecastIcon(day.weatherIcon)" alt="" aria-hidden="true" />
             <span class="forecast-condition">
               {{ day.weatherDescription }}
             </span>
@@ -113,13 +78,7 @@
           </article>
         </div>
 
-        <a
-          class="forecast-source"
-          href="https://openweathermap.org/forecast5"
-          target="_blank"
-          rel="noopener">
-          예보 데이터: OpenWeather
-        </a>
+        <a class="forecast-source" href="https://openweathermap.org/forecast5" target="_blank" rel="noopener"> 예보 데이터: OpenWeather </a>
       </template>
     </section>
 
@@ -128,7 +87,7 @@
       <dl>
         <div>
           <dt>최저 / 최고 기온</dt>
-          <dd>{{ configStore.formatTemp(detail.main.temp_min )}}° / {{ configStore.formatTemp(detail.main.temp_max) }}°</dd>
+          <dd>{{ configStore.formatTemp(detail.main.temp_min) }}° / {{ configStore.formatTemp(detail.main.temp_max) }}°</dd>
         </div>
         <div>
           <dt>기압</dt>
@@ -156,7 +115,6 @@
         </div>
       </dl>
     </div>
-
   </section>
 
   <section v-else class="empty-state">
@@ -172,95 +130,84 @@ import { getFiveDayForecast, getWeatherList } from '@/api/weatherApi'
 import { useConfigStore } from '@/stores/configStore'
 import CountUp from '@/components/exercise/CountUp.vue'
 
-const configStore = useConfigStore();
-const route = useRoute();
-const router = useRouter();
-const city = ref(null);
-const isLoading = ref(true);
-const fiveDayForecast = ref([]);
-const hourlyForecast = ref([]);
-const forecastStatus = ref('loading');
-const forecastErrorMessage = ref('5일 예보를 불러오지 못했습니다.');
+const configStore = useConfigStore()
+const route = useRoute()
+const router = useRouter()
+const city = ref(null)
+const isLoading = ref(true)
+const fiveDayForecast = ref([])
+const hourlyForecast = ref([])
+const forecastStatus = ref('loading')
+const forecastErrorMessage = ref('5일 예보를 불러오지 못했습니다.')
 
 const loadFiveDayForecast = async (currentCity) => {
-  const requestedCityId = String(currentCity.id);
-  const { lat, lon } = currentCity.detail.coord;
+  const requestedCityId = String(currentCity.id)
+  const { lat, lon } = currentCity.detail.coord
 
-  forecastStatus.value = 'loading';
-  forecastErrorMessage.value = '5일 예보를 불러오지 못했습니다.';
+  forecastStatus.value = 'loading'
+  forecastErrorMessage.value = '5일 예보를 불러오지 못했습니다.'
 
   try {
     const forecast = await getFiveDayForecast({
       cityId: requestedCityId,
       latitude: lat,
       longitude: lon,
-    });
+    })
     // console.log(forecast)
 
-    if (String(city.value?.id) !== requestedCityId) return;
+    if (String(city.value?.id) !== requestedCityId) return
 
-    fiveDayForecast.value = forecast.daily;
-    hourlyForecast.value = forecast.hourly;
-    forecastStatus.value = 'success';
+    fiveDayForecast.value = forecast.daily
+    hourlyForecast.value = forecast.hourly
+    forecastStatus.value = 'success'
   } catch (error) {
-    console.error(error);
+    console.error(error)
 
-    if (String(city.value?.id) !== requestedCityId) return;
+    if (String(city.value?.id) !== requestedCityId) return
 
-    fiveDayForecast.value = [];
-    hourlyForecast.value = [];
-    forecastErrorMessage.value = error.response?.data?.message
-      || '5일 예보를 불러오지 못했습니다.';
-    forecastStatus.value = 'error';
+    fiveDayForecast.value = []
+    hourlyForecast.value = []
+    forecastErrorMessage.value = error.response?.data?.message || '5일 예보를 불러오지 못했습니다.'
+    forecastStatus.value = 'error'
   }
-};
+}
 
 const loadCity = async () => {
-  isLoading.value = true;
-  fiveDayForecast.value = [];
-  hourlyForecast.value = [];
-  forecastStatus.value = 'loading';
-  forecastErrorMessage.value = '5일 예보를 불러오지 못했습니다.';
+  isLoading.value = true
+  fiveDayForecast.value = []
+  hourlyForecast.value = []
+  forecastStatus.value = 'loading'
+  forecastErrorMessage.value = '5일 예보를 불러오지 못했습니다.'
 
-  const routedCity = window.history.state?.city;
-  if (
-    routedCity &&
-    String(routedCity.id) === String(route.params.cityId) &&
-    routedCity.detail
-  ) {
-    city.value = routedCity;
-    isLoading.value = false;
-    loadFiveDayForecast(routedCity);
-    return;
+  const routedCity = window.history.state?.city
+  if (routedCity && String(routedCity.id) === String(route.params.cityId) && routedCity.detail) {
+    city.value = routedCity
+    isLoading.value = false
+    loadFiveDayForecast(routedCity)
+    return
   }
 
   try {
-    const weatherList = await getWeatherList();
-    city.value = weatherList.find(
-      (item) => String(item.id) === String(route.params.cityId),
-    ) ?? null;
+    const weatherList = await getWeatherList()
+    city.value = weatherList.find((item) => String(item.id) === String(route.params.cityId)) ?? null
   } catch (error) {
-    console.error(error);
-    city.value = null;
+    console.error(error)
+    city.value = null
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 
   if (city.value?.detail?.coord) {
-    loadFiveDayForecast(city.value);
+    loadFiveDayForecast(city.value)
   }
-};
+}
 
-watch(() => route.params.cityId, loadCity, { immediate: true });
+watch(() => route.params.cityId, loadCity, { immediate: true })
 
-const detail = computed(() => city.value?.detail ?? null);
-const displayedTemperature = computed(() =>
-  configStore.convertTemp(detail.value?.main?.temp ?? 0),
-)
+const detail = computed(() => city.value?.detail ?? null)
+const displayedTemperature = computed(() => configStore.convertTemp(detail.value?.main?.temp ?? 0))
 
-const weatherIcon = computed(() =>
-  `https://openweathermap.org/img/wn/${detail.value?.weather?.[0]?.icon}@2x.png`,
-)
+const weatherIcon = computed(() => `https://openweathermap.org/img/wn/${detail.value?.weather?.[0]?.icon}@2x.png`)
 
 const hourlyForecastItems = computed(() => {
   if (!detail.value || hourlyForecast.value.length === 0) return []
@@ -270,8 +217,7 @@ const hourlyForecastItems = computed(() => {
     dateTime: new Date(detail.value.dt * 1000).toISOString(),
     timeLabel: '지금',
     temp: Math.round(detail.value.main.temp),
-    precipitationProbability:
-      hourlyForecast.value[0].precipitationProbability,
+    precipitationProbability: hourlyForecast.value[0].precipitationProbability,
     windSpeed: detail.value.wind.speed,
     weatherDescription: detail.value.weather[0].description,
     weatherIcon: detail.value.weather[0].icon,
@@ -313,12 +259,11 @@ function formatForecastHour(timestamp) {
   }).format(new Date(localTimestamp))
 }
 
-const getForecastIcon = (icon) =>
-  `https://openweathermap.org/img/wn/${icon}@2x.png`
+const getForecastIcon = (icon) => `https://openweathermap.org/img/wn/${icon}@2x.png`
 
 const closeDetail = () => {
-  router.push({ name: 'weather', query: route.query });
-};
+  router.push({ name: 'weather', query: route.query })
+}
 </script>
 
 <style scoped>
@@ -613,7 +558,9 @@ const closeDetail = () => {
   cursor: pointer;
   font-size: 24px;
   line-height: 1;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .modal-close:hover {

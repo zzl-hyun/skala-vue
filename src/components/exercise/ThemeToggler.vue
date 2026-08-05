@@ -1,14 +1,5 @@
 <template>
-  <UButton
-    type="button"
-    color="neutral"
-    variant="outline"
-    size="xs"
-    square
-    class="theme-toggle"
-    :aria-label="buttonLabel"
-    :title="buttonLabel"
-    @click="configStore.toggleTheme">
+  <UButton type="button" color="neutral" variant="outline" size="xs" square class="theme-toggle" :aria-label="buttonLabel" :title="buttonLabel" @click="configStore.toggleTheme">
     <span aria-hidden="true">{{ configStore.isDark ? '☀' : '☾' }}</span>
   </UButton>
 </template>
@@ -19,9 +10,7 @@ import { useConfigStore } from '@/stores/configStore'
 
 const configStore = useConfigStore()
 // console.log(configStore.theme)
-const buttonLabel = computed(() =>
-  configStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환',
-)
+const buttonLabel = computed(() => (configStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환'))
 </script>
 
 <style scoped>

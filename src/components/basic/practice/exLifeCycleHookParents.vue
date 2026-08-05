@@ -12,7 +12,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import ExLifeCycleHookChild from './exLifeCycleHookChild.vue';
+import ExLifeCycleHookChild from './exLifeCycleHookChild.vue'
 
 const isShow = ref(true)
 </script>

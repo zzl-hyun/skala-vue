@@ -61,21 +61,16 @@ const getCustomCities = () => {
 
 const requestCurrentWeather = async (city) => {
   const hasCoordinates = Number.isFinite(city.lat) && Number.isFinite(city.lon)
-  const locationParams = hasCoordinates
-    ? { lat: city.lat, lon: city.lon }
-    : { q: `${city.name},${city.country ?? 'KR'}` }
+  const locationParams = hasCoordinates ? { lat: city.lat, lon: city.lon } : { q: `${city.name},${city.country ?? 'KR'}` }
 
-  const { data } = await axios.get(
-    'https://api.openweathermap.org/data/2.5/weather',
-    {
-      params: {
-        ...locationParams,
-        appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
-        units: 'metric',
-        lang: 'kr',
-      },
+  const { data } = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
+    params: {
+      ...locationParams,
+      appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
+      units: 'metric',
+      lang: 'kr',
     },
-  )
+  })
   // console.log(data)
 
   return {
@@ -101,9 +96,7 @@ export const getWeatherList = async ({ forceRefresh = false } = {}) => {
   }
 
   const allCities = [...cities, ...getCustomCities()]
-  const weatherList = await Promise.all(
-    allCities.map(requestCurrentWeather),
-  )
+  const weatherList = await Promise.all(allCities.map(requestCurrentWeather))
   // console.log(weatherList)
 
   saveWeatherListCache(weatherList)
@@ -112,16 +105,13 @@ export const getWeatherList = async ({ forceRefresh = false } = {}) => {
 }
 
 export const searchCities = async (query) => {
-  const { data } = await axios.get(
-    'https://api.openweathermap.org/geo/1.0/direct',
-    {
-      params: {
-        q: query,
-        limit: 5,
-        appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
-      },
+  const { data } = await axios.get('https://api.openweathermap.org/geo/1.0/direct', {
+    params: {
+      q: query,
+      limit: 5,
+      appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
     },
-  )
+  })
   // console.log(data)
 
   return data.map((city) => ({
@@ -135,8 +125,7 @@ export const searchCities = async (query) => {
   }))
 }
 
-export const getWeatherByLocation = (location) =>
-  requestCurrentWeather(location)
+export const getWeatherByLocation = (location) => requestCurrentWeather(location)
 
 export const saveCustomCity = (city) => {
   const customCities = getCustomCities()
@@ -150,22 +139,16 @@ export const saveCustomCity = (city) => {
     lon: city.detail.coord.lon,
   }
 
-  const isSaved = customCities.some(
-    (savedCity) => String(savedCity.id) === customCity.id,
-  )
+  const isSaved = customCities.some((savedCity) => String(savedCity.id) === customCity.id)
 
   if (!isSaved) {
-    localStorage.setItem(
-      CUSTOM_CITIES_KEY,
-      JSON.stringify([...customCities, customCity]),
-    )
+    localStorage.setItem(CUSTOM_CITIES_KEY, JSON.stringify([...customCities, customCity]))
   }
 
   return customCity
 }
 
-const getForecastCacheKey = (cityId) =>
-  `${FORECAST_CACHE_PREFIX}-${cityId}`
+const getForecastCacheKey = (cityId) => `${FORECAST_CACHE_PREFIX}-${cityId}`
 
 const getCachedForecast = (cityId) => {
   const cacheKey = getForecastCacheKey(cityId)
@@ -194,18 +177,15 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
     return cachedForecast
   }
 
-  const { data } = await axios.get(
-    'https://api.openweathermap.org/data/2.5/forecast',
-    {
-      params: {
-        lat: latitude,
-        lon: longitude,
-        appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
-        units: 'metric',
-        lang: 'kr',
-      },
+  const { data } = await axios.get('https://api.openweathermap.org/data/2.5/forecast', {
+    params: {
+      lat: latitude,
+      lon: longitude,
+      appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
+      units: 'metric',
+      lang: 'kr',
     },
-  )
+  })
   // console.log(data.list)
 
   const timezoneOffset = data.city?.timezone ?? 0
@@ -220,12 +200,8 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
   // console.log(hourlyForecast)
 
   const dailyForecasts = data.list.reduce((days, item) => {
-    const localDate = new Date(
-      (item.dt + timezoneOffset) * 1000,
-    ).toISOString().slice(0, 10)
-    const localHour = new Date(
-      (item.dt + timezoneOffset) * 1000,
-    ).getUTCHours()
+    const localDate = new Date((item.dt + timezoneOffset) * 1000).toISOString().slice(0, 10)
+    const localHour = new Date((item.dt + timezoneOffset) * 1000).getUTCHours()
     const noonDistance = Math.abs(localHour - 12)
     const weather = item.weather?.[0]
 
@@ -246,10 +222,7 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
     const day = days[localDate]
     day.tempMax = Math.max(day.tempMax, item.main.temp_max)
     day.tempMin = Math.min(day.tempMin, item.main.temp_min)
-    day.precipitationProbability = Math.max(
-      day.precipitationProbability,
-      Math.round((item.pop ?? 0) * 100),
-    )
+    day.precipitationProbability = Math.max(day.precipitationProbability, Math.round((item.pop ?? 0) * 100))
 
     if (noonDistance < day.noonDistance) {
       day.weatherDescription = weather?.description ?? '날씨 정보 없음'

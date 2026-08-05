@@ -17,6 +17,7 @@
 | 라이트·다크 모드 | Pinia 전역 테마 상태와 CSS 색상 토큰을 이용한 화면 테마 전환 |
 | 라우팅 기반 모달 | URL이 변경되는 상세 라우트를 대시보드 위 모달로 표시 |
 | 모달 스크롤 제어 | 상세 모달이 열리면 배경 스크롤을 잠그고 닫을 때 복원 |
+| 시간대별 예보 | 현재부터 3시간 간격의 기온·아이콘·강수확률·풍속을 가로 스크롤로 표시 |
 | 5일 예보 | 도시별 최고·최저 기온, 날씨, 강수확률 표시 |
 | 온도 카운트 효과 | 카드와 상세 모달의 현재 기온을 목표값까지 자연스럽게 증가시키는 애니메이션 |
 | API 캐싱 | 현재 날씨 목록과 도시별 5일 예보를 각각 1시간 캐싱 |
@@ -103,11 +104,12 @@
 
 관련 코드: [`router/index.js`](src/router/index.js), [`WeatherHomeView.vue`](src/views/WeatherHomeView.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 
-### 6. 도시별 5일 예보
+### 6. 시간대별·도시별 5일 예보
 
 - 상세 모달이 열렸을 때만 선택한 도시 좌표로 OpenWeather 5 Day / 3 Hour Forecast API를 요청합니다.
+- 같은 API 응답으로 현재 및 3시간 간격의 기온, 날씨 아이콘, 강수확률, 풍속을 가로 스크롤로 표시합니다.
 - 3시간 간격 응답을 날짜별로 묶어 최고·최저 기온, 정오에 가까운 날씨, 최대 강수확률을 표시합니다.
-- `five-day-forecast-{cityId}` 키로 도시별 예보를 1시간 캐싱합니다.
+- `five-day-forecast-v2-{cityId}` 키로 시간대별·일별 예보를 함께 1시간 캐싱합니다.
 - 빠르게 다른 도시로 이동했을 때 이전 요청 결과가 현재 도시에 표시되지 않도록 요청 도시 ID를 확인합니다.
 
 관련 코드: [`weatherApi.js`](src/api/weatherApi.js), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)

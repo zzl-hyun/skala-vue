@@ -26,15 +26,14 @@ watch(
       <RouterLink to="/" class="brand">
         <span class="brand-mark" aria-hidden="true"></span>
         <span>
-          <strong>Weather</strong>
-          <small>과제 4: 라우터 적용</small>
+          <strong>과제 4: 라우터 적용</strong>
         </span>
       </RouterLink>
 
       <nav class="nav-bar" aria-label="주요 메뉴">
-        <RouterLink to="/" class="nav-item">🌦️ 날씨 대시보드</RouterLink>
-        <RouterLink to="/practice" class="nav-item">📝 Vue 연습</RouterLink>
-        <RouterLink to="/about" class="nav-item">ℹ️ 서비스 소개</RouterLink>
+        <RouterLink to="/" class="nav-item">🌦️ Home</RouterLink>
+        <RouterLink to="/about" class="nav-item">ℹ️ About</RouterLink>
+        <RouterLink to="/practice" class="nav-item">📝 Practice</RouterLink>
       </nav>
 
       <div class="header-actions">

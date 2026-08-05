@@ -3,7 +3,7 @@ import { cities } from '@/data/cities'
 
 const CACHE_KEY = 'weather-list'
 const CACHE_DURATION = 60 * 60 * 1000
-const FORECAST_CACHE_PREFIX = 'five-day-forecast'
+const FORECAST_CACHE_PREFIX = 'five-day-forecast-v2'
 const CUSTOM_CITIES_KEY = 'weather-custom-cities'
 
 export const getWeatherCacheInfo = () => {
@@ -209,6 +209,16 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
   // console.log(data.list)
 
   const timezoneOffset = data.city?.timezone ?? 0
+  const hourlyForecast = data.list.slice(0, 8).map((item) => ({
+    timestamp: item.dt,
+    temp: Math.round(item.main.temp),
+    precipitationProbability: Math.round((item.pop ?? 0) * 100),
+    windSpeed: item.wind?.speed ?? 0,
+    weatherDescription: item.weather?.[0]?.description ?? '날씨 정보 없음',
+    weatherIcon: item.weather?.[0]?.icon ?? '',
+  }))
+  // console.log(hourlyForecast)
+
   const dailyForecasts = data.list.reduce((days, item) => {
     const localDate = new Date(
       (item.dt + timezoneOffset) * 1000,
@@ -261,14 +271,18 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
       weatherDescription: day.weatherDescription,
       weatherIcon: day.weatherIcon,
     }))
+  const forecastData = {
+    daily: forecast,
+    hourly: hourlyForecast,
+  }
 
   localStorage.setItem(
     getForecastCacheKey(cityId),
     JSON.stringify({
       savedAt: Date.now(),
-      forecast,
+      forecast: forecastData,
     }),
   )
 
-  return forecast
+  return forecastData
 }

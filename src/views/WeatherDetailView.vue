@@ -48,11 +48,11 @@
       </article>
     </div>
 
-    <section class="forecast-section" aria-labelledby="weekly-forecast-title">
-      <h3 id="weekly-forecast-title">7일 예보</h3>
+    <section class="forecast-section" aria-labelledby="five-day-forecast-title">
+      <h3 id="five-day-forecast-title">5일 예보</h3>
 
       <p v-if="forecastStatus === 'loading'" class="forecast-status" aria-live="polite">
-        주간 예보를 불러오는 중입니다.
+        5일 예보를 불러오는 중입니다.
       </p>
       <p
         v-else-if="forecastStatus === 'error'"
@@ -63,19 +63,22 @@
 
       <div v-else class="forecast-grid">
         <article
-          v-for="day in weeklyForecast"
+          v-for="day in fiveDayForecast"
           :key="day.date"
           class="forecast-day">
           <time :datetime="day.date">{{ formatForecastDate(day.date) }}</time>
-          <span class="forecast-icon" aria-hidden="true">
-            {{ getForecastCondition(day.weatherCode).icon }}
-          </span>
+          <img
+            v-if="day.weatherIcon"
+            class="forecast-icon"
+            :src="getForecastIcon(day.weatherIcon)"
+            alt=""
+            aria-hidden="true" />
           <span class="forecast-condition">
-            {{ getForecastCondition(day.weatherCode).label }}
+            {{ day.weatherDescription }}
           </span>
           <strong>
-            {{ configStore.formatTemp(day.tempMax) }}
-            <span>{{ configStore.formatTemp(day.tempMin) }}</span>
+            <span>{{ configStore.formatTemp(day.tempMin) }}</span> ~ 
+            {{ configStore.formatTemp(day.tempMax) }} 
           </strong>
           <small>강수 {{ day.precipitationProbability }}%</small>
         </article>
@@ -84,10 +87,10 @@
       <a
         v-if="forecastStatus === 'success'"
         class="forecast-source"
-        href="https://open-meteo.com/"
+        href="https://openweathermap.org/forecast5"
         target="_blank"
         rel="noopener">
-        예보 데이터: Open-Meteo
+        예보 데이터: OpenWeather
       </a>
     </section>
 
@@ -136,7 +139,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getWeatherList, getWeeklyForecast } from '@/api/weatherApi'
+import { getFiveDayForecast, getWeatherList } from '@/api/weatherApi'
 import { useConfigStore } from '@/stores/configStore'
 
 const configStore = useConfigStore();
@@ -144,19 +147,19 @@ const route = useRoute();
 const router = useRouter();
 const city = ref(null);
 const isLoading = ref(true);
-const weeklyForecast = ref([]);
+const fiveDayForecast = ref([]);
 const forecastStatus = ref('loading');
-const forecastErrorMessage = ref('주간 예보를 불러오지 못했습니다.');
+const forecastErrorMessage = ref('5일 예보를 불러오지 못했습니다.');
 
-const loadWeeklyForecast = async (currentCity) => {
+const loadFiveDayForecast = async (currentCity) => {
   const requestedCityId = String(currentCity.id);
   const { lat, lon } = currentCity.detail.coord;
 
   forecastStatus.value = 'loading';
-  forecastErrorMessage.value = '주간 예보를 불러오지 못했습니다.';
+  forecastErrorMessage.value = '5일 예보를 불러오지 못했습니다.';
 
   try {
-    const forecast = await getWeeklyForecast({
+    const forecast = await getFiveDayForecast({
       cityId: requestedCityId,
       latitude: lat,
       longitude: lon,
@@ -164,25 +167,25 @@ const loadWeeklyForecast = async (currentCity) => {
 
     if (String(city.value?.id) !== requestedCityId) return;
 
-    weeklyForecast.value = forecast;
+    fiveDayForecast.value = forecast;
     forecastStatus.value = 'success';
   } catch (error) {
     console.error(error);
 
     if (String(city.value?.id) !== requestedCityId) return;
 
-    weeklyForecast.value = [];
-    forecastErrorMessage.value = error.response?.data?.reason
-      || '주간 예보를 불러오지 못했습니다.';
+    fiveDayForecast.value = [];
+    forecastErrorMessage.value = error.response?.data?.message
+      || '5일 예보를 불러오지 못했습니다.';
     forecastStatus.value = 'error';
   }
 };
 
 const loadCity = async () => {
   isLoading.value = true;
-  weeklyForecast.value = [];
+  fiveDayForecast.value = [];
   forecastStatus.value = 'loading';
-  forecastErrorMessage.value = '주간 예보를 불러오지 못했습니다.';
+  forecastErrorMessage.value = '5일 예보를 불러오지 못했습니다.';
 
   const routedCity = window.history.state?.city;
   if (
@@ -192,7 +195,7 @@ const loadCity = async () => {
   ) {
     city.value = routedCity;
     isLoading.value = false;
-    loadWeeklyForecast(routedCity);
+    loadFiveDayForecast(routedCity);
     return;
   }
 
@@ -209,7 +212,7 @@ const loadCity = async () => {
   }
 
   if (city.value?.detail?.coord) {
-    loadWeeklyForecast(city.value);
+    loadFiveDayForecast(city.value);
   }
 };
 
@@ -238,22 +241,8 @@ const formatForecastDate = (date) =>
     weekday: 'short',
   }).format(new Date(`${date}T00:00:00`))
 
-const getForecastCondition = (code) => {
-  if (code === 0) return { icon: '☀️', label: '맑음' }
-  if ([1, 2].includes(code)) return { icon: '🌤️', label: '구름 조금' }
-  if (code === 3) return { icon: '☁️', label: '흐림' }
-  if ([45, 48].includes(code)) return { icon: '🌫️', label: '안개' }
-  if ([51, 53, 55, 56, 57].includes(code)) return { icon: '🌦️', label: '이슬비' }
-  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) {
-    return { icon: '🌧️', label: '비' }
-  }
-  if ([71, 73, 75, 77, 85, 86].includes(code)) {
-    return { icon: '🌨️', label: '눈' }
-  }
-  if ([95, 96, 99].includes(code)) return { icon: '⛈️', label: '뇌우' }
-
-  return { icon: '🌥️', label: '날씨 변화' }
-}
+const getForecastIcon = (icon) =>
+  `https://openweathermap.org/img/wn/${icon}@2x.png`
 
 const closeDetail = () => {
   router.push({ name: 'weather', query: route.query });
@@ -376,7 +365,7 @@ const closeDetail = () => {
 
 .forecast-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(84px, 1fr));
+  grid-template-columns: repeat(5, minmax(96px, 1fr));
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
@@ -402,7 +391,8 @@ const closeDetail = () => {
 }
 
 .forecast-icon {
-  font-size: 23px;
+  width: 38px;
+  height: 38px;
 }
 
 .forecast-condition {

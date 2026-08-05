@@ -17,8 +17,8 @@
 | 라이트·다크 모드 | Pinia 전역 테마 상태와 CSS 색상 토큰을 이용한 화면 테마 전환 |
 | 라우팅 기반 모달 | URL이 변경되는 상세 라우트를 대시보드 위 모달로 표시 |
 | 모달 스크롤 제어 | 상세 모달이 열리면 배경 스크롤을 잠그고 닫을 때 복원 |
-| 7일 예보 | 도시별 최고·최저 기온, 날씨, 강수확률 표시 |
-| API 캐싱 | 현재 날씨 목록과 도시별 7일 예보를 각각 1시간 캐싱 |
+| 5일 예보 | 도시별 최고·최저 기온, 날씨, 강수확률 표시 |
+| API 캐싱 | 현재 날씨 목록과 도시별 5일 예보를 각각 1시간 캐싱 |
 | 캐시 상태·갱신 | 캐시 사용 여부와 남은 시간을 표시하고 만료 시 자동 또는 버튼으로 갱신 |
 | 사용자 도시 추가 | 기존 목록 필터와 Geocoding 도시 추가 검색을 하나의 검색창으로 통합 |
 | 내 위치 날씨 | 브라우저 위치 권한으로 현재 지역 날씨를 세션 동안 목록 최상단에 표시 |
@@ -34,7 +34,7 @@
 | `vue` | Composition API와 컴포넌트 기반 화면 구성 |
 | `vue-router` | Hash 라우팅, 검색 쿼리, 중첩 라우트 기반 상세 모달 |
 | `pinia` | 섭씨·화씨 단위와 라이트·다크 테마 전역 상태 관리 |
-| `axios` | OpenWeather와 Open-Meteo HTTP 요청 |
+| `axios` | OpenWeather 현재 날씨·지역 검색·5일 예보 HTTP 요청 |
 | `@nuxt/ui` | 검색창, 셀렉트, 버튼, 배지 등 공통 UI 요소 |
 | `tailwindcss` | Nuxt UI 스타일 시스템과 전역 디자인 토큰 |
 | `vite` | 개발 서버, 프로덕션 빌드, GitHub Pages 배포 경로 설정 |
@@ -45,7 +45,7 @@
 | 서비스 | 사용 목적 |
 | --- | --- |
 | OpenWeather Current Weather · Geocoding API | 기본·사용자 추가 도시의 위치 검색과 현재 관측 정보 조회 |
-| Open-Meteo Forecast API | 선택 도시의 7일 일별 예보 조회 |
+| OpenWeather 5 Day / 3 Hour Forecast API | 선택 도시의 3시간 간격 예보를 5일 일별 예보로 가공 |
 | Windy Embed Map | 대한민국 중심 날씨 지도와 레이어 표시 |
 | Browser Geolocation API | 사용자 동의 후 현재 위도·경도를 조회해 위치 기반 날씨 표시 |
 | GitHub Actions · GitHub Pages | `main` 브랜치 자동 빌드 및 배포 |
@@ -84,7 +84,7 @@
 ### 4. 전역 단위와 테마 변경
 
 - Pinia store에서 섭씨·화씨 상태와 변환 함수를 관리합니다.
-- 헤더에서 단위를 변경하면 현재 날씨 카드, 상세 정보, 7일 예보가 함께 갱신됩니다.
+- 헤더에서 단위를 변경하면 현재 날씨 카드, 상세 정보, 5일 예보가 함께 갱신됩니다.
 - API 원본 데이터는 섭씨로 유지하고 출력 시점에만 변환합니다.
 - 같은 store에서 라이트·다크 테마 상태를 관리하고 루트 클래스와 동기화합니다.
 - 선택한 테마를 `localStorage`에 저장해 새로고침 후에도 복원합니다.
@@ -101,11 +101,11 @@
 
 관련 코드: [`router/index.js`](src/router/index.js), [`WeatherHomeView.vue`](src/views/WeatherHomeView.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 
-### 6. 도시별 7일 예보
+### 6. 도시별 5일 예보
 
-- 상세 모달이 열렸을 때만 선택한 도시 좌표로 Open-Meteo API를 요청합니다.
-- 날짜, 날씨 코드, 최고·최저 기온, 최대 강수확률을 표시합니다.
-- `weekly-forecast-{cityId}` 키로 도시별 예보를 1시간 캐싱합니다.
+- 상세 모달이 열렸을 때만 선택한 도시 좌표로 OpenWeather 5 Day / 3 Hour Forecast API를 요청합니다.
+- 3시간 간격 응답을 날짜별로 묶어 최고·최저 기온, 정오에 가까운 날씨, 최대 강수확률을 표시합니다.
+- `five-day-forecast-{cityId}` 키로 도시별 예보를 1시간 캐싱합니다.
 - 빠르게 다른 도시로 이동했을 때 이전 요청 결과가 현재 도시에 표시되지 않도록 요청 도시 ID를 확인합니다.
 
 관련 코드: [`weatherApi.js`](src/api/weatherApi.js), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
@@ -150,7 +150,7 @@ VITE_OPENWEATHER_API_KEY=발급받은_API_KEY
 npm run dev
 ```
 
-기본 개발 서버 주소는 `http://localhost:3000`입니다. Open-Meteo 7일 예보는 별도 API 키가 필요하지 않습니다.
+기본 개발 서버 주소는 `http://localhost:3000`입니다. 현재 날씨와 5일 예보는 같은 OpenWeather API 키를 사용합니다.
 
 ## 확인한 항목
 

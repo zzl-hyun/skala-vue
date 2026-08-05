@@ -3,7 +3,7 @@ import { cities } from '@/data/cities'
 
 const CACHE_KEY = 'weather-list'
 const CACHE_DURATION = 60 * 60 * 1000
-const FORECAST_CACHE_PREFIX = 'weekly-forecast'
+const FORECAST_CACHE_PREFIX = 'five-day-forecast'
 const CUSTOM_CITIES_KEY = 'weather-custom-cities'
 
 export const getWeatherCacheInfo = () => {
@@ -184,37 +184,78 @@ const getCachedForecast = (cityId) => {
   }
 }
 
-export const getWeeklyForecast = async ({ cityId, latitude, longitude }) => {
+export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
   const cachedForecast = getCachedForecast(cityId)
 
   if (cachedForecast) {
     return cachedForecast
   }
 
-  const { data } = await axios.get('https://api.open-meteo.com/v1/forecast', {
-    params: {
-      latitude,
-      longitude,
-      daily: [
-        'weather_code',
-        'temperature_2m_max',
-        'temperature_2m_min',
-        'precipitation_probability_max',
-      ].join(','),
-      timezone: 'auto',
-      forecast_days: 7,
-      temperature_unit: 'celsius',
+  const { data } = await axios.get(
+    'https://api.openweathermap.org/data/2.5/forecast',
+    {
+      params: {
+        lat: latitude,
+        lon: longitude,
+        appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
+        units: 'metric',
+        lang: 'kr',
+      },
     },
-  })
+  )
 
-  const forecast = data.daily.time.map((date, index) => ({
-    date,
-    weatherCode: data.daily.weather_code[index],
-    tempMax: data.daily.temperature_2m_max[index],
-    tempMin: data.daily.temperature_2m_min[index],
-    precipitationProbability:
-      data.daily.precipitation_probability_max[index] ?? 0,
-  }))
+  const timezoneOffset = data.city?.timezone ?? 0
+  const dailyForecasts = data.list.reduce((days, item) => {
+    const localDate = new Date(
+      (item.dt + timezoneOffset) * 1000,
+    ).toISOString().slice(0, 10)
+    const localHour = new Date(
+      (item.dt + timezoneOffset) * 1000,
+    ).getUTCHours()
+    const noonDistance = Math.abs(localHour - 12)
+    const weather = item.weather?.[0]
+
+    if (!days[localDate]) {
+      days[localDate] = {
+        date: localDate,
+        tempMax: item.main.temp_max,
+        tempMin: item.main.temp_min,
+        precipitationProbability: Math.round((item.pop ?? 0) * 100),
+        weatherDescription: weather?.description ?? '날씨 정보 없음',
+        weatherIcon: weather?.icon ?? '',
+        noonDistance,
+      }
+
+      return days
+    }
+
+    const day = days[localDate]
+    day.tempMax = Math.max(day.tempMax, item.main.temp_max)
+    day.tempMin = Math.min(day.tempMin, item.main.temp_min)
+    day.precipitationProbability = Math.max(
+      day.precipitationProbability,
+      Math.round((item.pop ?? 0) * 100),
+    )
+
+    if (noonDistance < day.noonDistance) {
+      day.weatherDescription = weather?.description ?? '날씨 정보 없음'
+      day.weatherIcon = weather?.icon ?? ''
+      day.noonDistance = noonDistance
+    }
+
+    return days
+  }, {})
+
+  const forecast = Object.values(dailyForecasts)
+    .slice(0, 5)
+    .map((day) => ({
+      date: day.date,
+      tempMax: Math.round(day.tempMax),
+      tempMin: Math.round(day.tempMin),
+      precipitationProbability: day.precipitationProbability,
+      weatherDescription: day.weatherDescription,
+      weatherIcon: day.weatherIcon,
+    }))
 
   localStorage.setItem(
     getForecastCacheKey(cityId),

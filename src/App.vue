@@ -24,7 +24,6 @@ watch(
   <div class="app-container">
     <header class="app-header">
       <RouterLink to="/" class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
         <span>
           <strong>과제 4: 라우터 적용</strong>
         </span>

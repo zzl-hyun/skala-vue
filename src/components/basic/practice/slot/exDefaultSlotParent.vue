@@ -13,8 +13,7 @@
 </template>
 
 <script setup>
-import SlotDefaultChild from '../../../../../old/components/practices/component/SlotDefaultChild.vue';
-
+import SlotDefaultChild from './exDafaultSlotChild.vue'
 
 </script>
 

@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "npm run fetch:kma-warnings",
     "dev": "vite",
+    "prebuild": "npm run fetch:kma-warnings",
     "build": "vite build",
+    "fetch:kma-warnings": "node scripts/fetch-kma-warnings.mjs",
     "preview": "vite preview",
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",

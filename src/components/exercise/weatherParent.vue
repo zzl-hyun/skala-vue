@@ -79,6 +79,7 @@ import SearchBar from './SearchBar.vue'
 import WeatherCard from './weatherCard.vue'
 import WeatherMap from './WeatherMap.vue'
 import { getWeatherByLocation, getWeatherCacheInfo, getWeatherList, saveCustomCity, saveWeatherListCache } from '@/api/weatherApi'
+import { getKmaWarnings, getWarningsForCity } from '@/api/kmaWarningApi'
 import { useRoute, useRouter } from 'vue-router'
 import { useFavoriteCities } from '@/composables/useFavoriteCities'
 
@@ -115,7 +116,14 @@ const isAddingCity = ref(false)
 const isLocating = ref(false)
 const cityAddMessage = ref('')
 const currentLocationCity = ref(null)
+const kmaWarnings = ref([])
 let cacheTimer
+
+const attachWarnings = (weatherItems) =>
+  weatherItems.map((city) => ({
+    ...city,
+    warnings: getWarningsForCity(city, kmaWarnings.value),
+  }))
 
 /**
  * 저장된 캐시 또는 OpenWeather API에서 현재 날씨 목록을 불러온다.
@@ -132,10 +140,21 @@ const loadWeather = async ({ forceRefresh = false } = {}) => {
   }
 
   try {
-    weatherList.value = await getWeatherList({ forceRefresh })
+    const weatherItems = await getWeatherList({ forceRefresh })
+    weatherList.value = weatherItems
     // console.log(weatherList.value)
     apiStatus.value = 'success'
     weatherSource.value = cacheBeforeLoad ? 'cache' : 'network'
+
+    // 기상청 특보 실패가 OpenWeather 현재 날씨 화면까지 막지 않도록 별도로 처리한다.
+    try {
+      kmaWarnings.value = await getKmaWarnings({ forceRefresh })
+      // console.log(kmaWarnings.value)
+      weatherList.value = attachWarnings(weatherItems)
+    } catch (warningError) {
+      console.error('기상청 특보를 불러오지 못했습니다.', warningError)
+      kmaWarnings.value = []
+    }
 
     const cacheInfo = getWeatherCacheInfo()
     cacheExpiresAt.value = cacheInfo?.expiresAt ?? 0
@@ -235,6 +254,7 @@ const loadCurrentLocation = async () => {
       ...currentCity,
       name_kr: `현재 위치 · ${locationName}`,
       isCurrentLocation: true,
+      warnings: existingCity?.warnings ?? getWarningsForCity(currentCity, kmaWarnings.value),
     }
     searchQuery.value = ''
     cityAddMessage.value = `현재 위치(${locationName}) 날씨를 불러왔습니다.`
@@ -253,12 +273,16 @@ const addCity = async (location) => {
     const newCity = await getWeatherByLocation(location)
     // console.log(newCity)
     const existingCity = weatherList.value.find((item) => String(item.detail?.id) === String(newCity.detail.id))
-    const targetCity = existingCity ?? newCity
+    const newCityWithWarnings = {
+      ...newCity,
+      warnings: getWarningsForCity(newCity, kmaWarnings.value),
+    }
+    const targetCity = existingCity ?? newCityWithWarnings
 
     // OpenWeather 도시 ID가 같은 항목은 중복 저장하지 않는다.
     if (!existingCity) {
-      weatherList.value.push(newCity)
-      saveCustomCity(newCity)
+      weatherList.value.push(newCityWithWarnings)
+      saveCustomCity(newCityWithWarnings)
 
       const cacheInfo = saveWeatherListCache(weatherList.value)
       cacheExpiresAt.value = cacheInfo.expiresAt

@@ -21,6 +21,23 @@
       </div>
     </header>
 
+    <section v-if="cityWarnings.length" class="warning-section" aria-labelledby="weather-warning-title">
+      <div class="warning-heading">
+        <h3 id="weather-warning-title">기상특보</h3>
+        <span>{{ cityWarnings.length }}건</span>
+      </div>
+
+      <ul class="warning-list">
+        <li v-for="warning in cityWarnings" :key="`${warning.type}-${warning.level}-${warning.regionCode}`">
+          <div>
+            <UBadge :color="getWarningColor(warning.level)" variant="soft" size="sm">{{ warning.label }}</UBadge>
+            <strong>{{ warning.regionName }}</strong>
+          </div>
+          <small v-if="warning.effectiveAt">발효 {{ formatWarningTime(warning.effectiveAt) }}</small>
+        </li>
+      </ul>
+    </section>
+
     <div class="summary-grid">
       <article class="summary-card">
         <span>🌡️ 체감온도</span>
@@ -127,6 +144,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getFiveDayForecast, getWeatherList } from '@/api/weatherApi'
+import { getKmaWarnings, getWarningsForCity } from '@/api/kmaWarningApi'
 import { useConfigStore } from '@/stores/configStore'
 import CountUp from '@/components/exercise/CountUp.vue'
 
@@ -139,6 +157,23 @@ const fiveDayForecast = ref([])
 const hourlyForecast = ref([])
 const forecastStatus = ref('loading')
 const forecastErrorMessage = ref('5일 예보를 불러오지 못했습니다.')
+
+const loadWarnings = async (currentCity) => {
+  if (Array.isArray(currentCity.warnings)) return
+
+  try {
+    const warnings = await getKmaWarnings()
+
+    if (String(city.value?.id) !== String(currentCity.id)) return
+
+    city.value = {
+      ...city.value,
+      warnings: getWarningsForCity(currentCity, warnings),
+    }
+  } catch (error) {
+    console.error('상세 화면에서 기상특보를 불러오지 못했습니다.', error)
+  }
+}
 
 const loadFiveDayForecast = async (currentCity) => {
   const requestedCityId = String(currentCity.id)
@@ -183,6 +218,7 @@ const loadCity = async () => {
   if (routedCity && String(routedCity.id) === String(route.params.cityId) && routedCity.detail) {
     city.value = routedCity
     isLoading.value = false
+    loadWarnings(routedCity)
     loadFiveDayForecast(routedCity)
     return
   }
@@ -198,6 +234,7 @@ const loadCity = async () => {
   }
 
   if (city.value?.detail?.coord) {
+    loadWarnings(city.value)
     loadFiveDayForecast(city.value)
   }
 }
@@ -205,6 +242,7 @@ const loadCity = async () => {
 watch(() => route.params.cityId, loadCity, { immediate: true })
 
 const detail = computed(() => city.value?.detail ?? null)
+const cityWarnings = computed(() => city.value?.warnings ?? [])
 const displayedTemperature = computed(() => configStore.convertTemp(detail.value?.main?.temp ?? 0))
 
 const weatherIcon = computed(() => `https://openweathermap.org/img/wn/${detail.value?.weather?.[0]?.icon}@2x.png`)
@@ -260,6 +298,19 @@ function formatForecastHour(timestamp) {
 }
 
 const getForecastIcon = (icon) => `https://openweathermap.org/img/wn/${icon}@2x.png`
+
+const getWarningColor = (level) => (['예비', '주의', '주의보'].includes(level) ? 'warning' : 'error')
+
+const formatWarningTime = (value) => {
+  if (!/^\d{12}$/.test(value)) return value
+
+  const month = Number(value.slice(4, 6))
+  const day = Number(value.slice(6, 8))
+  const hour = value.slice(8, 10)
+  const minute = value.slice(10, 12)
+
+  return `${month}월 ${day}일 ${hour}:${minute}`
+}
 
 const closeDetail = () => {
   router.push({ name: 'weather', query: route.query })
@@ -339,6 +390,65 @@ const closeDetail = () => {
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin: 12px 0;
+}
+
+.warning-section {
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-background-soft);
+}
+
+.warning-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.warning-heading h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.warning-heading span,
+.warning-list small {
+  color: var(--color-text-soft);
+  font-size: 11px;
+}
+
+.warning-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.warning-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--color-background-mute);
+}
+
+.warning-list li div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.warning-list strong {
+  overflow: hidden;
+  color: var(--color-heading);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .summary-card {

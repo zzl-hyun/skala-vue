@@ -13,6 +13,7 @@ watch(
     root.classList.toggle('dark', theme === 'dark');
     root.classList.toggle('light', theme === 'light');
     window.localStorage.setItem('weather-theme', theme);
+    // console.log(theme)
   },
   { immediate: true },
 );
@@ -32,6 +33,7 @@ watch(
 
       <nav class="nav-bar" aria-label="주요 메뉴">
         <RouterLink to="/" class="nav-item">🌦️ 날씨 대시보드</RouterLink>
+        <RouterLink to="/practice" class="nav-item">📝 Vue 연습</RouterLink>
         <RouterLink to="/about" class="nav-item">ℹ️ 서비스 소개</RouterLink>
       </nav>
 

@@ -16,6 +16,7 @@
 import { useConfigStore } from '@/stores/configStore';
 
 const configStore = useConfigStore();
+// console.log(configStore.unit)
 </script>
 
 <style scoped>

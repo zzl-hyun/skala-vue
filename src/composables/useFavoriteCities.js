@@ -5,6 +5,7 @@ const STORAGE_KEY = 'weather-favorite-city-ids'
 const readFavoriteIds = () => {
   try {
     const savedIds = JSON.parse(localStorage.getItem(STORAGE_KEY))
+    // console.log(savedIds)
 
     return Array.isArray(savedIds) ? savedIds.map(String) : []
   } catch {
@@ -29,6 +30,7 @@ export const useFavoriteCities = () => {
   watch(
     favoriteIds,
     (ids) => {
+      // console.log(ids)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
     },
     { deep: true },

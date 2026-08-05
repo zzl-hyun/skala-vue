@@ -47,6 +47,8 @@ const selectedOverlay = ref('temp')
 const windyEmbedUrl = computed(() =>
   `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=m/s&zoom=7&overlay=${selectedOverlay.value}&product=ecmwf&level=surface&lat=36.385&lon=127.979&pressure=true&message=true`,
 )
+// console.log(selectedOverlay.value)
+// console.log(windyEmbedUrl.value)
 </script>
 
 <style scoped>

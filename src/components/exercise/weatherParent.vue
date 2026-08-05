@@ -163,6 +163,7 @@ const loadWeather = async ({ forceRefresh = false } = {}) => {
 
   try {
     weatherList.value = await getWeatherList({ forceRefresh });
+    // console.log(weatherList.value)
     apiStatus.value = 'success';
     weatherSource.value = cacheBeforeLoad ? 'cache' : 'network';
 
@@ -250,6 +251,7 @@ const loadCurrentLocation = async () => {
 
   try {
     const position = await getBrowserPosition();
+    // console.log(position)
     const currentCity = await getWeatherByLocation({
       lat: position.coords.latitude,
       lon: position.coords.longitude,
@@ -279,6 +281,7 @@ const addCity = async (location) => {
 
   try {
     const newCity = await getWeatherByLocation(location);
+    // console.log(newCity)
     const existingCity = weatherList.value.find(
       (item) => String(item.detail?.id) === String(newCity.detail.id),
     );

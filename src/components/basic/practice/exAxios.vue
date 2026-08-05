@@ -157,8 +157,10 @@ const handleFetchWeather = async () => {
 
     try{
         const response = await axios.get(URL);
+        // console.log(response)
 
         weatherData.value = response.data;
+        // console.log(weatherData.value)
     }catch(err){
         console.error(err);
         alert('FETCH ERROR');

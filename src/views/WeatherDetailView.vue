@@ -25,7 +25,14 @@
 
       <div class="temperature">
         <img :src="weatherIcon" :alt="detail.weather[0].description" />
-        <strong>{{ configStore.formatTemp(Math.round(detail.main.temp)) }}</strong>
+        <strong :aria-label="configStore.formatTemp(detail.main.temp)">
+          <span aria-hidden="true">
+            <CountUp
+              :to="displayedTemperature"
+              :duration="0.8"
+              class-name="temperature-count" />{{ configStore.unitSymbol }}
+          </span>
+        </strong>
       </div>
     </header>
 
@@ -48,11 +55,14 @@
       </article>
     </div>
 
-    <section class="forecast-section" aria-labelledby="weekly-forecast-title">
-      <h3 id="weekly-forecast-title">7일 예보</h3>
+    <section class="forecast-section" aria-labelledby="hourly-forecast-title">
+      <div class="forecast-heading">
+        <h3 id="hourly-forecast-title">시간대별 예보</h3>
+        <span>3시간 간격</span>
+      </div>
 
       <p v-if="forecastStatus === 'loading'" class="forecast-status" aria-live="polite">
-        주간 예보를 불러오는 중입니다.
+        예보를 불러오는 중입니다.
       </p>
       <p
         v-else-if="forecastStatus === 'error'"
@@ -61,34 +71,56 @@
         {{ forecastErrorMessage }}
       </p>
 
-      <div v-else class="forecast-grid">
-        <article
-          v-for="day in weeklyForecast"
-          :key="day.date"
-          class="forecast-day">
-          <time :datetime="day.date">{{ formatForecastDate(day.date) }}</time>
-          <span class="forecast-icon" aria-hidden="true">
-            {{ getForecastCondition(day.weatherCode).icon }}
-          </span>
-          <span class="forecast-condition">
-            {{ getForecastCondition(day.weatherCode).label }}
-          </span>
-          <strong>
-            {{ configStore.formatTemp(day.tempMax) }}
-            <span>{{ configStore.formatTemp(day.tempMin) }}</span>
-          </strong>
-          <small>강수 {{ day.precipitationProbability }}%</small>
-        </article>
-      </div>
+      <template v-else>
+        <div class="hourly-forecast" tabindex="0" aria-label="시간대별 날씨 예보">
+          <article
+            v-for="item in hourlyForecastItems"
+            :key="`${item.timestamp}-${item.timeLabel}`"
+            class="hourly-item">
+            <time :datetime="item.dateTime">{{ item.timeLabel }}</time>
+            <img
+              v-if="item.weatherIcon"
+              class="hourly-icon"
+              :src="getForecastIcon(item.weatherIcon)"
+              :alt="item.weatherDescription" />
+            <strong>{{ configStore.formatTemp(item.temp) }}</strong>
+            <small>강수 {{ item.precipitationProbability }}%</small>
+            <small>풍속 {{ item.windSpeed }} m/s</small>
+          </article>
+        </div>
 
-      <a
-        v-if="forecastStatus === 'success'"
-        class="forecast-source"
-        href="https://open-meteo.com/"
-        target="_blank"
-        rel="noopener">
-        예보 데이터: Open-Meteo
-      </a>
+        <h3 id="five-day-forecast-title" class="five-day-heading">5일 예보</h3>
+        <div class="forecast-grid" aria-labelledby="five-day-forecast-title">
+          <article
+            v-for="day in fiveDayForecast"
+            :key="day.date"
+            class="forecast-day">
+            <time :datetime="day.date">{{ formatForecastDate(day.date) }}</time>
+            <img
+              v-if="day.weatherIcon"
+              class="forecast-icon"
+              :src="getForecastIcon(day.weatherIcon)"
+              alt=""
+              aria-hidden="true" />
+            <span class="forecast-condition">
+              {{ day.weatherDescription }}
+            </span>
+            <strong>
+              <span>{{ configStore.formatTemp(day.tempMin) }}</span> ~
+              {{ configStore.formatTemp(day.tempMax) }}
+            </strong>
+            <small>강수 {{ day.precipitationProbability }}%</small>
+          </article>
+        </div>
+
+        <a
+          class="forecast-source"
+          href="https://openweathermap.org/forecast5"
+          target="_blank"
+          rel="noopener">
+          예보 데이터: OpenWeather
+        </a>
+      </template>
     </section>
 
     <div class="details-card">
@@ -136,53 +168,59 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getWeatherList, getWeeklyForecast } from '@/api/weatherApi'
+import { getFiveDayForecast, getWeatherList } from '@/api/weatherApi'
 import { useConfigStore } from '@/stores/configStore'
+import CountUp from '@/components/exercise/CountUp.vue'
 
 const configStore = useConfigStore();
 const route = useRoute();
 const router = useRouter();
 const city = ref(null);
 const isLoading = ref(true);
-const weeklyForecast = ref([]);
+const fiveDayForecast = ref([]);
+const hourlyForecast = ref([]);
 const forecastStatus = ref('loading');
-const forecastErrorMessage = ref('주간 예보를 불러오지 못했습니다.');
+const forecastErrorMessage = ref('5일 예보를 불러오지 못했습니다.');
 
-const loadWeeklyForecast = async (currentCity) => {
+const loadFiveDayForecast = async (currentCity) => {
   const requestedCityId = String(currentCity.id);
   const { lat, lon } = currentCity.detail.coord;
 
   forecastStatus.value = 'loading';
-  forecastErrorMessage.value = '주간 예보를 불러오지 못했습니다.';
+  forecastErrorMessage.value = '5일 예보를 불러오지 못했습니다.';
 
   try {
-    const forecast = await getWeeklyForecast({
+    const forecast = await getFiveDayForecast({
       cityId: requestedCityId,
       latitude: lat,
       longitude: lon,
     });
+    // console.log(forecast)
 
     if (String(city.value?.id) !== requestedCityId) return;
 
-    weeklyForecast.value = forecast;
+    fiveDayForecast.value = forecast.daily;
+    hourlyForecast.value = forecast.hourly;
     forecastStatus.value = 'success';
   } catch (error) {
     console.error(error);
 
     if (String(city.value?.id) !== requestedCityId) return;
 
-    weeklyForecast.value = [];
-    forecastErrorMessage.value = error.response?.data?.reason
-      || '주간 예보를 불러오지 못했습니다.';
+    fiveDayForecast.value = [];
+    hourlyForecast.value = [];
+    forecastErrorMessage.value = error.response?.data?.message
+      || '5일 예보를 불러오지 못했습니다.';
     forecastStatus.value = 'error';
   }
 };
 
 const loadCity = async () => {
   isLoading.value = true;
-  weeklyForecast.value = [];
+  fiveDayForecast.value = [];
+  hourlyForecast.value = [];
   forecastStatus.value = 'loading';
-  forecastErrorMessage.value = '주간 예보를 불러오지 못했습니다.';
+  forecastErrorMessage.value = '5일 예보를 불러오지 못했습니다.';
 
   const routedCity = window.history.state?.city;
   if (
@@ -192,7 +230,7 @@ const loadCity = async () => {
   ) {
     city.value = routedCity;
     isLoading.value = false;
-    loadWeeklyForecast(routedCity);
+    loadFiveDayForecast(routedCity);
     return;
   }
 
@@ -209,17 +247,44 @@ const loadCity = async () => {
   }
 
   if (city.value?.detail?.coord) {
-    loadWeeklyForecast(city.value);
+    loadFiveDayForecast(city.value);
   }
 };
 
 watch(() => route.params.cityId, loadCity, { immediate: true });
 
 const detail = computed(() => city.value?.detail ?? null);
+const displayedTemperature = computed(() =>
+  configStore.convertTemp(detail.value?.main?.temp ?? 0),
+)
 
 const weatherIcon = computed(() =>
   `https://openweathermap.org/img/wn/${detail.value?.weather?.[0]?.icon}@2x.png`,
 )
+
+const hourlyForecastItems = computed(() => {
+  if (!detail.value || hourlyForecast.value.length === 0) return []
+
+  const currentItem = {
+    timestamp: detail.value.dt,
+    dateTime: new Date(detail.value.dt * 1000).toISOString(),
+    timeLabel: '지금',
+    temp: Math.round(detail.value.main.temp),
+    precipitationProbability:
+      hourlyForecast.value[0].precipitationProbability,
+    windSpeed: detail.value.wind.speed,
+    weatherDescription: detail.value.weather[0].description,
+    weatherIcon: detail.value.weather[0].icon,
+  }
+
+  const forecastItems = hourlyForecast.value.slice(0, 7).map((item) => ({
+    ...item,
+    dateTime: new Date(item.timestamp * 1000).toISOString(),
+    timeLabel: formatForecastHour(item.timestamp),
+  }))
+
+  return [currentItem, ...forecastItems]
+})
 
 const formatTime = (timestamp) => {
   const localTimestamp = (timestamp + (detail.value?.timezone ?? 0)) * 1000
@@ -238,22 +303,18 @@ const formatForecastDate = (date) =>
     weekday: 'short',
   }).format(new Date(`${date}T00:00:00`))
 
-const getForecastCondition = (code) => {
-  if (code === 0) return { icon: '☀️', label: '맑음' }
-  if ([1, 2].includes(code)) return { icon: '🌤️', label: '구름 조금' }
-  if (code === 3) return { icon: '☁️', label: '흐림' }
-  if ([45, 48].includes(code)) return { icon: '🌫️', label: '안개' }
-  if ([51, 53, 55, 56, 57].includes(code)) return { icon: '🌦️', label: '이슬비' }
-  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) {
-    return { icon: '🌧️', label: '비' }
-  }
-  if ([71, 73, 75, 77, 85, 86].includes(code)) {
-    return { icon: '🌨️', label: '눈' }
-  }
-  if ([95, 96, 99].includes(code)) return { icon: '⛈️', label: '뇌우' }
+function formatForecastHour(timestamp) {
+  const localTimestamp = (timestamp + (detail.value?.timezone ?? 0)) * 1000
 
-  return { icon: '🌥️', label: '날씨 변화' }
+  return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'UTC',
+    hour: 'numeric',
+    hourCycle: 'h23',
+  }).format(new Date(localTimestamp))
 }
+
+const getForecastIcon = (icon) =>
+  `https://openweathermap.org/img/wn/${icon}@2x.png`
 
 const closeDetail = () => {
   router.push({ name: 'weather', query: route.query });
@@ -321,6 +382,13 @@ const closeDetail = () => {
   letter-spacing: -0.04em;
 }
 
+.temperature-count {
+  display: inline-block;
+  min-width: 2ch;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -363,6 +431,17 @@ const closeDetail = () => {
   font-size: 16px;
 }
 
+.forecast-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.forecast-heading span {
+  color: var(--color-text-soft);
+  font-size: 11px;
+}
+
 .forecast-status {
   margin: 0;
   padding: 14px 0;
@@ -374,9 +453,59 @@ const closeDetail = () => {
   color: var(--color-danger);
 }
 
+.hourly-forecast {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 7px;
+  scrollbar-width: thin;
+}
+
+.hourly-item {
+  display: flex;
+  min-width: 92px;
+  flex: 0 0 92px;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 6px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  background: var(--color-background-mute);
+  text-align: center;
+}
+
+.hourly-item time {
+  color: var(--color-heading);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.hourly-item strong {
+  color: var(--color-heading);
+  font-size: 15px;
+}
+
+.hourly-item small {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.hourly-icon {
+  width: 38px;
+  height: 38px;
+}
+
+.forecast-section .five-day-heading {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
 .forecast-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(84px, 1fr));
+  grid-template-columns: repeat(5, minmax(96px, 1fr));
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
@@ -402,7 +531,8 @@ const closeDetail = () => {
 }
 
 .forecast-icon {
-  font-size: 23px;
+  width: 38px;
+  height: 38px;
 }
 
 .forecast-condition {

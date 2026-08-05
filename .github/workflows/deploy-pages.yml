@@ -42,6 +42,15 @@ jobs:
           VITE_KMA_API_KEY: ${{ secrets.VITE_KMA_API_KEY }}
           VITE_KAKAO_REST_API_KEY: ${{ secrets.VITE_KAKAO_REST_API_KEY }}
 
+      - name: Validate KMA warning snapshot
+        run: >-
+          node -e "const fs = require('node:fs');
+          const data = JSON.parse(fs.readFileSync('dist/kma-warnings.json', 'utf8'));
+          if (!data.fetchedAt || !Array.isArray(data.warnings)) {
+            throw new Error('KMA warning snapshot is invalid; keeping the previous Pages deployment.');
+          }
+          console.log('Validated KMA warning snapshot:', data.warnings.length, 'warnings');"
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

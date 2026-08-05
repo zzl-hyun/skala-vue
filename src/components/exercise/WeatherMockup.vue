@@ -36,7 +36,7 @@ watchEffect(() => {
 
 const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.')
 // - selectedCityInfo 감시 (watch 이용): 상태바 문구가 바뀔때 마다 콘솔로그를 작성
-watch(selectedCityInfo, (newValue, oldValue) => {
+watch(selectedCityInfo, (newValue) => {
   console.log('[watch 감지] 상태 바 문구가 업데이트 되었습니다. ->', newValue)
 })
 

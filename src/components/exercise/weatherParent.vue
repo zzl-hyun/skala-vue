@@ -11,8 +11,10 @@
           <SearchBar 
               :cur-query="searchQuery"
               :adding="isAddingCity"
+              :locating="isLocating"
               @update-query="updateSearchQuery"
-              @add-city="addCity">
+              @add-city="addCity"
+              @request-location="loadCurrentLocation">
           </SearchBar>
           <p v-if="cityAddMessage" class="city-add-message" aria-live="polite">
             {{ cityAddMessage }}
@@ -142,7 +144,9 @@ const cacheExpiresAt = ref(0);
 const currentTime = ref(Date.now());
 const isRefreshing = ref(false);
 const isAddingCity = ref(false);
+const isLocating = ref(false);
 const cityAddMessage = ref('');
+const currentLocationCity = ref(null);
 let cacheTimer;
 
 const loadWeather = async ({ forceRefresh = false } = {}) => {
@@ -217,6 +221,56 @@ const favoriteOnly = ref(false);
 const { favoriteIds, isFavorite, toggleFavorite } = useFavoriteCities();
 const favoriteCount = computed(() => favoriteIds.value.length);
 
+const getBrowserPosition = () => new Promise((resolve, reject) => {
+  navigator.geolocation.getCurrentPosition(resolve, reject, {
+    enableHighAccuracy: false,
+    timeout: 10 * 1000,
+    maximumAge: 5 * 60 * 1000,
+  });
+});
+
+const getLocationErrorMessage = (error) => {
+  if (error?.code === 1) return '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해 주세요.';
+  if (error?.code === 2) return '현재 위치를 확인할 수 없습니다.';
+  if (error?.code === 3) return '위치 확인 시간이 초과되었습니다. 다시 시도해 주세요.';
+  return '현재 위치 날씨를 불러오지 못했습니다.';
+};
+
+const loadCurrentLocation = async () => {
+  if (!('geolocation' in navigator)) {
+    cityAddMessage.value = '이 브라우저에서는 위치 기능을 사용할 수 없습니다.';
+    return;
+  }
+
+  isLocating.value = true;
+  cityAddMessage.value = '현재 위치를 확인하는 중입니다.';
+
+  try {
+    const position = await getBrowserPosition();
+    const currentCity = await getWeatherByLocation({
+      lat: position.coords.latitude,
+      lon: position.coords.longitude,
+    });
+    const existingCity = weatherList.value.find(
+      (item) => String(item.detail?.id) === String(currentCity.detail.id),
+    );
+    const locationName = existingCity?.name_kr ?? currentCity.name;
+
+    currentLocationCity.value = {
+      ...currentCity,
+      name_kr: `현재 위치 · ${locationName}`,
+      isCurrentLocation: true,
+    };
+    searchQuery.value = '';
+    favoriteOnly.value = false;
+    cityAddMessage.value = `현재 위치(${locationName}) 날씨를 불러왔습니다.`;
+  } catch (error) {
+    cityAddMessage.value = getLocationErrorMessage(error);
+  } finally {
+    isLocating.value = false;
+  }
+};
+
 const addCity = async (location) => {
   isAddingCity.value = true;
   cityAddMessage.value = '';
@@ -284,7 +338,15 @@ const filteredWeatherList = computed(() => {
     .map((keyword) => keyword.trim().toLowerCase())
     .filter(Boolean)
 
-  let result = [...weatherList.value]
+  const currentCityId = currentLocationCity.value?.detail?.id
+  let result = currentLocationCity.value
+    ? [
+        currentLocationCity.value,
+        ...weatherList.value.filter(
+          (item) => String(item.detail?.id) !== String(currentCityId),
+        ),
+      ]
+    : [...weatherList.value]
 
   if (keywords.length > 0) {
     result = result.filter((item) =>
@@ -320,6 +382,15 @@ const filteredWeatherList = computed(() => {
 
       return (values[sortKey.value][0] - values[sortKey.value][1]) * multiplier
     })
+  }
+
+  const currentLocationIndex = result.findIndex(
+    (item) => item.isCurrentLocation,
+  )
+
+  if (currentLocationIndex > 0) {
+    const [currentLocation] = result.splice(currentLocationIndex, 1)
+    result.unshift(currentLocation)
   }
 
   return result
@@ -374,8 +445,8 @@ const showDetail = (city) => {
 .status-bar {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #eef0f2;
-  color: #9ca3af;
+  border-top: 1px solid var(--color-border-soft);
+  color: var(--color-text-soft);
   font-size: 12px;
 }
 .empty-message{
@@ -396,20 +467,20 @@ const showDetail = (city) => {
   gap: 12px;
   margin: -4px 0 14px;
   padding: 9px 10px;
-  border: 1px solid #eef0f2;
+  border: 1px solid var(--color-border-soft);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--color-background-mute);
 }
 
 .cache-row p {
   margin: 0;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 11px;
 }
 
 .city-add-message {
   margin: 8px 0 0;
-  color: #4b5563;
+  color: var(--color-text);
   font-size: 12px;
 }
 
@@ -421,7 +492,7 @@ const showDetail = (city) => {
 
 .section-heading h2 {
   margin: 0;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -429,7 +500,7 @@ const showDetail = (city) => {
 
 .section-heading p {
   margin: 0;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 12px;
 }
 
@@ -453,7 +524,7 @@ const showDetail = (city) => {
 
 .favorite-filter span {
   margin-left: 3px;
-  color: #94a3b8;
+  color: var(--color-text-soft);
 }
 
 .api-status {
@@ -462,15 +533,15 @@ const showDetail = (city) => {
 }
 
 .api-status--loading {
-  color: #4b5563;
+  color: var(--color-text);
 }
 
 .api-status--success {
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .api-status--error {
-  color: #b91c1c;
+  color: var(--color-danger);
 }
 
 .weather-grid {

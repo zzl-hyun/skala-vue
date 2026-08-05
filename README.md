@@ -14,12 +14,14 @@
 | 다중 기준 정렬 | 이름·기온·체감온도·습도·풍속 정렬 및 오름차순·내림차순 전환 |
 | 즐겨찾기 | 도시별 즐겨찾기와 즐겨찾기 전용 필터, 브라우저 재접속 시 복원 |
 | 온도 단위 변경 | Pinia를 이용해 전체 화면의 섭씨·화씨를 동시에 변경 |
+| 라이트·다크 모드 | Pinia 전역 테마 상태와 CSS 색상 토큰을 이용한 화면 테마 전환 |
 | 라우팅 기반 모달 | URL이 변경되는 상세 라우트를 대시보드 위 모달로 표시 |
 | 모달 스크롤 제어 | 상세 모달이 열리면 배경 스크롤을 잠그고 닫을 때 복원 |
 | 7일 예보 | 도시별 최고·최저 기온, 날씨, 강수확률 표시 |
 | API 캐싱 | 현재 날씨 목록과 도시별 7일 예보를 각각 1시간 캐싱 |
 | 캐시 상태·갱신 | 캐시 사용 여부와 남은 시간을 표시하고 만료 시 자동 또는 버튼으로 갱신 |
 | 사용자 도시 추가 | 기존 목록 필터와 Geocoding 도시 추가 검색을 하나의 검색창으로 통합 |
+| 내 위치 날씨 | 브라우저 위치 권한으로 현재 지역 날씨를 세션 동안 목록 최상단에 표시 |
 | 컴포넌트 분리 | 검색·카드·지도·단위 기능을 분리하고 props/emits로 연결 |
 | 날씨 지도 | Windy의 기온·강수·구름·기압·바람·레이더·UV 레이어 전환 |
 | 예외 처리 | API 로딩·성공·실패 상태와 404 화면 제공 |
@@ -31,7 +33,7 @@
 | --- | --- |
 | `vue` | Composition API와 컴포넌트 기반 화면 구성 |
 | `vue-router` | Hash 라우팅, 검색 쿼리, 중첩 라우트 기반 상세 모달 |
-| `pinia` | 섭씨·화씨 전역 상태와 온도 변환 함수 관리 |
+| `pinia` | 섭씨·화씨 단위와 라이트·다크 테마 전역 상태 관리 |
 | `axios` | OpenWeather와 Open-Meteo HTTP 요청 |
 | `@nuxt/ui` | 검색창, 셀렉트, 버튼, 배지 등 공통 UI 요소 |
 | `tailwindcss` | Nuxt UI 스타일 시스템과 전역 디자인 토큰 |
@@ -45,6 +47,7 @@
 | OpenWeather Current Weather · Geocoding API | 기본·사용자 추가 도시의 위치 검색과 현재 관측 정보 조회 |
 | Open-Meteo Forecast API | 선택 도시의 7일 일별 예보 조회 |
 | Windy Embed Map | 대한민국 중심 날씨 지도와 레이어 표시 |
+| Browser Geolocation API | 사용자 동의 후 현재 위도·경도를 조회해 위치 기반 날씨 표시 |
 | GitHub Actions · GitHub Pages | `main` 브랜치 자동 빌드 및 배포 |
 
 ## 구현 기능
@@ -78,13 +81,16 @@
 
 관련 코드: [`weatherParent.vue`](src/components/exercise/weatherParent.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`useFavoriteCities.js`](src/composables/useFavoriteCities.js)
 
-### 4. 전역 온도 단위 변경
+### 4. 전역 단위와 테마 변경
 
 - Pinia store에서 섭씨·화씨 상태와 변환 함수를 관리합니다.
 - 헤더에서 단위를 변경하면 현재 날씨 카드, 상세 정보, 7일 예보가 함께 갱신됩니다.
 - API 원본 데이터는 섭씨로 유지하고 출력 시점에만 변환합니다.
+- 같은 store에서 라이트·다크 테마 상태를 관리하고 루트 클래스와 동기화합니다.
+- 선택한 테마를 `localStorage`에 저장해 새로고침 후에도 복원합니다.
+- 공통 CSS 색상 토큰으로 대시보드, 상세 모달, 소개 및 404 화면을 함께 전환합니다.
 
-관련 코드: [`configStore.js`](src/stores/configStore.js), [`UnitToggler.vue`](src/components/exercise/UnitToggler.vue)
+관련 코드: [`configStore.js`](src/stores/configStore.js), [`UnitToggler.vue`](src/components/exercise/UnitToggler.vue), [`ThemeToggler.vue`](src/components/exercise/ThemeToggler.vue)
 
 ### 5. 라우팅 기반 상세 모달
 
@@ -104,14 +110,16 @@
 
 관련 코드: [`weatherApi.js`](src/api/weatherApi.js), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 
-### 7. 원하는 도시 직접 추가
+### 7. 지역 검색과 현재 위치 날씨
 
-- 하나의 검색창에서 입력 중에는 기존 카드 목록을 필터링하고, `추가 후보 찾기`를 누르면 새 도시 후보를 검색합니다.
+- 하나의 검색창에서 입력 중에는 기존 카드 목록을 필터링하고, `지역 찾기`를 누르면 새 지역 후보를 검색합니다.
 - OpenWeather Geocoding API에서 국문·영문 도시 이름으로 최대 5개 후보를 검색합니다.
 - 같은 이름의 도시는 지역과 국가 코드를 함께 표시해 구분할 수 있습니다.
 - 선택한 후보의 좌표로 현재 날씨를 조회하고 목록과 `localStorage`에 추가합니다.
 - 즐겨찾기는 자동으로 지정하지 않고 각 날씨 카드의 별 버튼으로 직접 설정합니다.
 - 이미 있는 도시를 다시 선택해도 중복 카드를 만들지 않습니다.
+- `내 위치` 버튼은 사용자 동의를 받은 좌표로 현재 날씨를 조회합니다.
+- 현재 위치는 기존 도시와 중복되지 않게 목록 최상단에 표시하고 좌표를 `localStorage`에 저장하지 않습니다.
 
 관련 코드: [`SearchBar.vue`](src/components/exercise/SearchBar.vue), [`weatherApi.js`](src/api/weatherApi.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 

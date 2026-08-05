@@ -1,8 +1,8 @@
 <template>
     <section class="search-child" aria-labelledby="city-search-title">
       <div class="search-heading">
-        <h3 id="city-search-title">🔍 도시 검색</h3>
-        <p>입력하면 목록을 필터링하고, 추가 후보도 찾을 수 있습니다.</p>
+        <h3 id="city-search-title">🔍 검색</h3>
+        <p>지역을 검색하거나 현재 위치 날씨를 확인할 수 있습니다.</p>
       </div>
 
       <form class="search-row" @submit.prevent="handleCitySearch">
@@ -10,7 +10,7 @@
           class="search-input"
           :model-value="curQuery"
           size="lg"
-          placeholder="도시 이름 입력"
+          placeholder="지역 이름 입력"
           aria-label="도시 검색"
           @update:model-value="sendCurQuery">
           <template v-if="curQuery" #trailing>
@@ -26,13 +26,26 @@
           </template>
         </UInput>
 
-        <UButton
-          type="submit"
-          color="neutral"
-          variant="outline"
-          :loading="searchStatus === 'loading'">
-          추가 후보 찾기
-        </UButton>
+        <div class="search-actions">
+          <UButton
+            type="button"
+            color="neutral"
+            variant="soft"
+            :loading="locating"
+            :disabled="adding || searchStatus === 'loading'"
+            @click="requestCurrentLocation">
+            ◎ 내 위치
+          </UButton>
+
+          <UButton
+            type="submit"
+            color="neutral"
+            variant="outline"
+            :loading="searchStatus === 'loading'"
+            :disabled="locating">
+            지역 찾기
+          </UButton>
+        </div>
       </form>
 
       <p v-if="searchMessage" class="search-message" aria-live="polite">
@@ -52,7 +65,7 @@
             color="neutral"
             variant="outline"
             size="xs"
-            :disabled="adding"
+            :disabled="adding || locating"
             @click="emit('add-city', city)">
             목록에 추가
           </UButton>
@@ -75,9 +88,13 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    locating: {
+        type: Boolean,
+        default: false,
+    },
 })
 
-const emit = defineEmits(['update-query', 'add-city'])
+const emit = defineEmits(['update-query', 'add-city', 'request-location'])
 const searchResults = ref([])
 const searchStatus = ref('idle')
 
@@ -101,6 +118,11 @@ const sendCurQuery = (value) => {
 const clearQuery = () => {
     resetCandidates()
     emit('update-query', '')
+}
+
+const requestCurrentLocation = () => {
+    resetCandidates()
+    emit('request-location')
 }
 
 const handleCitySearch = async () => {
@@ -141,14 +163,14 @@ const handleCitySearch = async () => {
 
 .search-heading h3 {
   margin: 0;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 15px;
   font-weight: 650;
 }
 
 .search-heading p {
   margin: 0;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 11px;
 }
 
@@ -161,9 +183,14 @@ const handleCitySearch = async () => {
   flex: 1;
 }
 
+.search-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .search-message {
   margin: 8px 0 0;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
@@ -181,9 +208,9 @@ const handleCitySearch = async () => {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 10px;
-  border: 1px solid #eef0f2;
+  border: 1px solid var(--color-border-soft);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--color-background-mute);
 }
 
 .search-results li div {
@@ -193,14 +220,14 @@ const handleCitySearch = async () => {
 }
 
 .search-results strong {
-  color: #111827;
+  color: var(--color-heading);
   font-size: 13px;
   font-weight: 600;
 }
 
 .search-results span {
   overflow: hidden;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -214,6 +241,11 @@ const handleCitySearch = async () => {
   .search-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .search-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>

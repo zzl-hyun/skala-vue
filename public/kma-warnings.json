@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-08-05T14:31:30.171Z",
+  "fetchedAt": "2026-08-05T16:51:50.283Z",
   "warnings": [
     {
       "regionGroupCode": "S1323000",
@@ -5330,19 +5330,6 @@
       "command": "발표",
       "endTime": "",
       "label": "열대야 주의"
-    },
-    {
-      "regionGroupCode": "L1052700",
-      "regionGroupName": "영광군",
-      "regionCode": "L1052710",
-      "regionName": "영광군(낙월면 제외)",
-      "issuedAt": "202608052300",
-      "effectiveAt": "202608052300",
-      "type": "호우",
-      "level": "주의",
-      "command": "발표",
-      "endTime": "",
-      "label": "호우 주의"
     }
   ]
 }

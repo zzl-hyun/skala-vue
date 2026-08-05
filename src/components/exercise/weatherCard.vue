@@ -30,8 +30,8 @@
 
       <div class="weather-visual">
         <img v-if="cityItem.detail?.weather?.[0]?.icon" class="weather-icon" :src="weatherIcon" :alt="cityItem.detail.weather[0].description" />
-        <UBadge :color="cityItem.temp >= hotTemperature ? 'error' : 'info'" variant="soft" size="sm">
-          {{ cityItem.temp >= hotTemperature ? '더움' : '선선함' }}
+        <UBadge v-if="activeWarning" :color="warningColor" variant="solid" size="sm" class="warning-badge" :title="activeWarning.regionName">
+          ⚠ {{ activeWarning.label }}<span v-if="additionalWarningCount"> 외 {{ additionalWarningCount }}건</span>
         </UBadge>
       </div>
     </div>
@@ -55,6 +55,11 @@
 import { useConfigStore } from '@/stores/configStore'
 import { computed } from 'vue'
 import CountUp from './CountUp.vue'
+
+/**
+ * 도시 한 곳의 현재 날씨를 표시하는 표현용 컴포넌트
+ * 데이터는 props로 받고 카드 선택, 즐겨찾기, 상세 이동 요청은 부모로 emit한다.
+ */
 const props = defineProps({
   cityItem: {
     type: Object,
@@ -72,8 +77,19 @@ const props = defineProps({
 // console.log(props.cityItem)
 const emit = defineEmits(['select-card', 'toggle-favorite', 'click-detail'])
 const configStore = useConfigStore()
+
+// API 원본 온도는 바꾸지 않고 전역 단위 설정에 맞는 표시값만 계산한다.
 const displayedTemperature = computed(() => configStore.convertTemp(props.cityItem.temp))
+
+// OpenWeather가 내려 준 아이콘 코드로 공식 날씨 이미지를 구성한다.
 const weatherIcon = computed(() => `https://openweathermap.org/img/wn/${props.cityItem.detail?.weather?.[0]?.icon}@2x.png`)
+
+// 실제 기상특보가 있는 도시에만 특보 배지를 표시한다.
+const activeWarning = computed(() => props.cityItem.warnings?.[0] ?? null)
+const additionalWarningCount = computed(() => Math.max(0, (props.cityItem.warnings?.length ?? 0) - 1))
+const warningColor = computed(() => (['예비', '주의', '주의보'].includes(activeWarning.value?.level) ? 'warning' : 'error'))
+
+// 한글 도시명이 따로 있으면 영문명과 날씨 상태를 보조 설명으로 묶는다.
 const citySubtitle = computed(() => {
   const subtitle = []
 
@@ -190,6 +206,13 @@ const citySubtitle = computed(() => {
   border-radius: 50%;
   background: var(--color-icon-background);
   box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+.warning-badge {
+  max-width: 116px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card-footer {

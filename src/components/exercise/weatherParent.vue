@@ -79,14 +79,21 @@ import SearchBar from './SearchBar.vue'
 import WeatherCard from './weatherCard.vue'
 import WeatherMap from './WeatherMap.vue'
 import { getWeatherByLocation, getWeatherCacheInfo, getWeatherList, saveCustomCity, saveWeatherListCache } from '@/api/weatherApi'
+import { getKmaWarnings, getWarningsForCity } from '@/api/kmaWarningApi'
 import { useRoute, useRouter } from 'vue-router'
 import { useFavoriteCities } from '@/composables/useFavoriteCities'
 
+/**
+ * 날씨 대시보드의 데이터와 화면 상태를 관리하는 부모 컴포넌트
+ * API 결과와 검색·정렬·즐겨찾기 상태를 소유하고 자식 컴포넌트에는 props와 emits로 연결한다.
+ */
 const route = useRoute()
 const router = useRouter()
+
+// URL에 검색어가 있으면 새로고침하거나 주소를 공유해도 같은 검색 상태로 시작한다.
 const initialQuery = typeof route.query.q === 'string' ? route.query.q : ''
 const searchQuery = ref(initialQuery)
-// - searchQuery 감시 (watchEffect 이용): 도시 검색어를 타이핑할 때 마다 변하는 searchQuery를 추적하여 콘솔로그로 작성
+
 const updateSearchQuery = (query) => {
   searchQuery.value = query
   cityAddMessage.value = ''
@@ -109,8 +116,20 @@ const isAddingCity = ref(false)
 const isLocating = ref(false)
 const cityAddMessage = ref('')
 const currentLocationCity = ref(null)
+const kmaWarnings = ref([])
 let cacheTimer
 
+const attachWarnings = (weatherItems) =>
+  weatherItems.map((city) => ({
+    ...city,
+    warnings: getWarningsForCity(city, kmaWarnings.value),
+  }))
+
+/**
+ * 저장된 캐시 또는 OpenWeather API에서 현재 날씨 목록을 불러온다.
+ * @param {Object} options
+ * @param {boolean} options.forceRefresh 캐시를 건너뛰고 새로 요청할지 여부
+ */
 const loadWeather = async ({ forceRefresh = false } = {}) => {
   const cacheBeforeLoad = forceRefresh ? null : getWeatherCacheInfo()
 
@@ -121,10 +140,21 @@ const loadWeather = async ({ forceRefresh = false } = {}) => {
   }
 
   try {
-    weatherList.value = await getWeatherList({ forceRefresh })
+    const weatherItems = await getWeatherList({ forceRefresh })
+    weatherList.value = weatherItems
     // console.log(weatherList.value)
     apiStatus.value = 'success'
     weatherSource.value = cacheBeforeLoad ? 'cache' : 'network'
+
+    // 기상청 특보 실패가 OpenWeather 현재 날씨 화면까지 막지 않도록 별도로 처리한다.
+    try {
+      kmaWarnings.value = await getKmaWarnings({ forceRefresh })
+      // console.log(kmaWarnings.value)
+      weatherList.value = attachWarnings(weatherItems)
+    } catch (warningError) {
+      console.error('기상청 특보를 불러오지 못했습니다.', warningError)
+      kmaWarnings.value = []
+    }
 
     const cacheInfo = getWeatherCacheInfo()
     cacheExpiresAt.value = cacheInfo?.expiresAt ?? 0
@@ -139,6 +169,8 @@ const loadWeather = async ({ forceRefresh = false } = {}) => {
 
 onMounted(() => {
   loadWeather()
+
+  // 남은 캐시 시간을 갱신하고 만료된 데이터는 자동으로 다시 요청한다.
   cacheTimer = window.setInterval(() => {
     currentTime.value = Date.now()
 
@@ -181,6 +213,7 @@ const favoriteOnly = ref(false)
 const { favoriteIds, isFavorite, toggleFavorite } = useFavoriteCities()
 const favoriteCount = computed(() => favoriteIds.value.length)
 
+// 콜백 기반 Geolocation API를 async/await로 다루기 위해 Promise로 감싼다.
 const getBrowserPosition = () =>
   new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -216,10 +249,12 @@ const loadCurrentLocation = async () => {
     const existingCity = weatherList.value.find((item) => String(item.detail?.id) === String(currentCity.detail.id))
     const locationName = existingCity?.name_kr ?? currentCity.name
 
+    // 현재 위치 카드는 저장 목록과 분리해 이번 접속 동안만 목록 최상단에 보여 준다.
     currentLocationCity.value = {
       ...currentCity,
       name_kr: `현재 위치 · ${locationName}`,
       isCurrentLocation: true,
+      warnings: existingCity?.warnings ?? getWarningsForCity(currentCity, kmaWarnings.value),
     }
     searchQuery.value = ''
     cityAddMessage.value = `현재 위치(${locationName}) 날씨를 불러왔습니다.`
@@ -238,11 +273,16 @@ const addCity = async (location) => {
     const newCity = await getWeatherByLocation(location)
     // console.log(newCity)
     const existingCity = weatherList.value.find((item) => String(item.detail?.id) === String(newCity.detail.id))
-    const targetCity = existingCity ?? newCity
+    const newCityWithWarnings = {
+      ...newCity,
+      warnings: getWarningsForCity(newCity, kmaWarnings.value),
+    }
+    const targetCity = existingCity ?? newCityWithWarnings
 
+    // OpenWeather 도시 ID가 같은 항목은 중복 저장하지 않는다.
     if (!existingCity) {
-      weatherList.value.push(newCity)
-      saveCustomCity(newCity)
+      weatherList.value.push(newCityWithWarnings)
+      saveCustomCity(newCityWithWarnings)
 
       const cacheInfo = saveWeatherListCache(weatherList.value)
       cacheExpiresAt.value = cacheInfo.expiresAt
@@ -261,6 +301,7 @@ const addCity = async (location) => {
   }
 }
 
+// 입력값을 query string에 반영해 검색 상태를 URL과 동기화한다.
 watch(searchQuery, (query) => {
   const normalizedQuery = query.trim()
   const currentQuery = typeof route.query.q === 'string' ? route.query.q : ''
@@ -278,6 +319,7 @@ watch(searchQuery, (query) => {
 watch(
   () => route.query.q,
   (query) => {
+    // 뒤로 가기처럼 URL이 먼저 변한 경우에는 입력값을 반대로 복원한다.
     const normalizedQuery = typeof query === 'string' ? query : ''
 
     if (normalizedQuery !== searchQuery.value) {
@@ -290,6 +332,7 @@ const toggleSortDirection = () => {
   sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
 }
 
+// 위치 카드 병합 → 검색 → 즐겨찾기 → 정렬 순서로 최종 표시 목록을 만든다.
 const filteredWeatherList = computed(() => {
   const keywords = searchQuery.value
     .split(',')
@@ -328,6 +371,7 @@ const filteredWeatherList = computed(() => {
 
   const currentLocationIndex = result.findIndex((item) => item.isCurrentLocation)
 
+  // 정렬 기준과 관계없이 현재 위치 날씨는 항상 첫 번째에 고정한다.
   if (currentLocationIndex > 0) {
     const [currentLocation] = result.splice(currentLocationIndex, 1)
     result.unshift(currentLocation)
@@ -337,7 +381,6 @@ const filteredWeatherList = computed(() => {
 })
 
 const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.')
-// - selectedCityInfo 감시 (watch 이용): 상태바 문구가 바뀔때 마다 콘솔로그를 작성
 watch(selectedCityInfo, (newValue) => {
   console.log('[watch 감지] 상태 바 문구가 업데이트 되었습니다. ->', newValue)
 })
@@ -346,6 +389,7 @@ const selectCity = (city) => {
 }
 
 const showDetail = (city) => {
+  // 이미 받은 응답을 History state로 전달해 상세 화면의 중복 API 요청을 줄인다.
   router.push({
     name: 'detail',
     params: {

@@ -33,6 +33,7 @@ watch(
           <RouterLink to="/" class="nav-item">🌦️ Home</RouterLink>
           <RouterLink to="/about" class="nav-item">ℹ️ About</RouterLink>
           <RouterLink to="/practice" class="nav-item">📝 Practice</RouterLink>
+          <RouterLink to="/404" class="nav-item">404페이지(test)</RouterLink>
         </nav>
 
         <div class="header-actions">

@@ -13,19 +13,13 @@
         :color="selectedOverlay === category.overlay ? 'primary' : 'neutral'"
         :variant="selectedOverlay === category.overlay ? 'soft' : 'outline'"
         size="xs"
-        @click="selectedOverlay = category.overlay">
+        @click="selectedOverlay = category.overlay"
+      >
         {{ category.label }}
       </UButton>
     </div>
 
-    <iframe
-      :key="selectedOverlay"
-      class="weather-map-frame"
-      title="Weather Map"
-      :src="windyEmbedUrl"
-      frameborder="0"
-      style="pointer-events: none;">
-    </iframe>
+    <iframe :key="selectedOverlay" class="weather-map-frame" title="Weather Map" :src="windyEmbedUrl" frameborder="0" style="pointer-events: none"> </iframe>
   </section>
 </template>
 
@@ -44,8 +38,9 @@ const windyCategories = [
 
 const selectedOverlay = ref('temp')
 
-const windyEmbedUrl = computed(() =>
-  `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=m/s&zoom=7&overlay=${selectedOverlay.value}&product=ecmwf&level=surface&lat=36.385&lon=127.979&pressure=true&message=true`,
+const windyEmbedUrl = computed(
+  () =>
+    `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=m/s&zoom=7&overlay=${selectedOverlay.value}&product=ecmwf&level=surface&lat=36.385&lon=127.979&pressure=true&message=true`,
 )
 // console.log(selectedOverlay.value)
 // console.log(windyEmbedUrl.value)

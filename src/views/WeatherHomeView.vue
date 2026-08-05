@@ -1,43 +1,43 @@
 <script setup>
-import { onBeforeUnmount, watch } from 'vue';
-import WeatherParent from '@/components/exercise/weatherParent.vue';
-import { useRoute, useRouter } from 'vue-router';
+import { onBeforeUnmount, watch } from 'vue'
+import WeatherParent from '@/components/exercise/weatherParent.vue'
+import { useRoute, useRouter } from 'vue-router'
 // import WeatherMockup from '../components/exercise/WeatherMockup.vue'
 
-const route = useRoute();
-const router = useRouter();
-const originalBodyOverflow = document.body.style.overflow;
-const originalHtmlOverflow = document.documentElement.style.overflow;
-const originalBodyPaddingRight = document.body.style.paddingRight;
+const route = useRoute()
+const router = useRouter()
+const originalBodyOverflow = document.body.style.overflow
+const originalHtmlOverflow = document.documentElement.style.overflow
+const originalBodyPaddingRight = document.body.style.paddingRight
 
 const restorePageScroll = () => {
-  document.body.style.overflow = originalBodyOverflow;
-  document.documentElement.style.overflow = originalHtmlOverflow;
-  document.body.style.paddingRight = originalBodyPaddingRight;
-};
+  document.body.style.overflow = originalBodyOverflow
+  document.documentElement.style.overflow = originalHtmlOverflow
+  document.body.style.paddingRight = originalBodyPaddingRight
+}
 
 watch(
   () => route.name === 'detail',
   (isModalOpen) => {
     // console.log(isModalOpen)
     if (!isModalOpen) {
-      restorePageScroll();
-      return;
+      restorePageScroll()
+      return
     }
 
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.paddingRight = `${scrollbarWidth}px`
   },
   { immediate: true },
-);
+)
 
-onBeforeUnmount(restorePageScroll);
+onBeforeUnmount(restorePageScroll)
 
 const closeDetail = () => {
-  router.push({ name: 'weather', query: route.query });
-};
+  router.push({ name: 'weather', query: route.query })
+}
 </script>
 
 <template>
@@ -46,15 +46,8 @@ const closeDetail = () => {
 
     <RouterView name="modal" v-slot="{ Component }">
       <Transition name="weather-modal">
-        <div
-          v-if="Component"
-          class="weather-modal-backdrop"
-          @click.self="closeDetail">
-          <div
-            class="weather-modal-shell"
-            role="dialog"
-            aria-modal="true"
-            aria-label="날씨 상세 정보">
+        <div v-if="Component" class="weather-modal-backdrop" @click.self="closeDetail">
+          <div class="weather-modal-shell" role="dialog" aria-modal="true" aria-label="날씨 상세 정보">
             <component :is="Component" />
           </div>
         </div>
@@ -64,7 +57,6 @@ const closeDetail = () => {
 </template>
 
 <style scoped>
-
 .back-link {
   display: inline-block;
   margin-bottom: 3rem;

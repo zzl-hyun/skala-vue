@@ -16,15 +16,12 @@ const readFavoriteIds = () => {
 export const useFavoriteCities = () => {
   const favoriteIds = ref(readFavoriteIds())
 
-  const isFavorite = (cityId) =>
-    favoriteIds.value.includes(String(cityId))
+  const isFavorite = (cityId) => favoriteIds.value.includes(String(cityId))
 
   const toggleFavorite = (cityId) => {
     const normalizedId = String(cityId)
 
-    favoriteIds.value = isFavorite(normalizedId)
-      ? favoriteIds.value.filter((id) => id !== normalizedId)
-      : [...favoriteIds.value, normalizedId]
+    favoriteIds.value = isFavorite(normalizedId) ? favoriteIds.value.filter((id) => id !== normalizedId) : [...favoriteIds.value, normalizedId]
   }
 
   watch(

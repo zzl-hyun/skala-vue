@@ -1,16 +1,7 @@
 <template>
-  <section
-    ref="playgroundRef"
-    class="run-playground"
-    @pointermove="handlePointerMove">
+  <section ref="playgroundRef" class="run-playground" @pointermove="handlePointerMove">
     <p class="hint">버튼을 클릭해 보세요</p>
-    <button
-      ref="buttonRef"
-      type="button"
-      class="troll-btn"
-      :style="buttonStyle">
-      클릭해봐
-    </button>
+    <button ref="buttonRef" type="button" class="troll-btn" :style="buttonStyle">클릭해봐</button>
   </section>
 </template>
 

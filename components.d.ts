@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BaseDashboardCard: typeof import('./src/components/exercise/BaseDashboardCard.vue')['default']
     ClassBind: typeof import('./src/components/basic/practice/ClassBind.vue')['default']
+    CountUp: typeof import('./src/components/exercise/CountUp.vue')['default']
     ExAxios: typeof import('./src/components/basic/practice/exAxios.vue')['default']
     ExComputed: typeof import('./src/components/basic/practice/exComputed.vue')['default']
     ExDafaultSlotChild: typeof import('./src/components/basic/practice/slot/exDafaultSlotChild.vue')['default']

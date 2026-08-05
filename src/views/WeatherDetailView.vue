@@ -25,7 +25,14 @@
 
       <div class="temperature">
         <img :src="weatherIcon" :alt="detail.weather[0].description" />
-        <strong>{{ configStore.formatTemp(Math.round(detail.main.temp)) }}</strong>
+        <strong :aria-label="configStore.formatTemp(detail.main.temp)">
+          <span aria-hidden="true">
+            <CountUp
+              :to="displayedTemperature"
+              :duration="0.8"
+              class-name="temperature-count" />{{ configStore.unitSymbol }}
+          </span>
+        </strong>
       </div>
     </header>
 
@@ -141,6 +148,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getFiveDayForecast, getWeatherList } from '@/api/weatherApi'
 import { useConfigStore } from '@/stores/configStore'
+import CountUp from '@/components/exercise/CountUp.vue'
 
 const configStore = useConfigStore();
 const route = useRoute();
@@ -219,6 +227,9 @@ const loadCity = async () => {
 watch(() => route.params.cityId, loadCity, { immediate: true });
 
 const detail = computed(() => city.value?.detail ?? null);
+const displayedTemperature = computed(() =>
+  configStore.convertTemp(detail.value?.main?.temp ?? 0),
+)
 
 const weatherIcon = computed(() =>
   `https://openweathermap.org/img/wn/${detail.value?.weather?.[0]?.icon}@2x.png`,
@@ -308,6 +319,13 @@ const closeDetail = () => {
   font-size: 34px;
   font-weight: 650;
   letter-spacing: -0.04em;
+}
+
+.temperature-count {
+  display: inline-block;
+  min-width: 2ch;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .summary-grid {

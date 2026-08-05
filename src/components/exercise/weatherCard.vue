@@ -24,8 +24,15 @@
 
         <div class="weather-main">
           <div class="current-temperature">
-            <strong>{{ configStore.formatTemp(cityItem.temp) }}</strong>
-            <span>현재 기온</span>
+            <strong :aria-label="configStore.formatTemp(cityItem.temp)">
+              <span aria-hidden="true">
+                <CountUp
+                  :to="displayedTemperature"
+                  :duration="0.65"
+                  class-name="temperature-count" />{{ configStore.unitSymbol }}
+              </span>
+            </strong>
+            <span class="current-temperature-label">현재 기온</span>
           </div>
 
           <div class="weather-visual">
@@ -65,6 +72,7 @@
 <script setup>
   import { useConfigStore } from '@/stores/configStore';
   import { computed } from 'vue';
+  import CountUp from './CountUp.vue';
   const props = defineProps({
       cityItem: {
           type: Object,
@@ -81,6 +89,9 @@
   })
   const emit = defineEmits(['select-card', 'toggle-favorite', 'click-detail'])
   const configStore = useConfigStore();
+  const displayedTemperature = computed(() =>
+    configStore.convertTemp(props.cityItem.temp),
+  )
   const weatherIcon = computed(() =>
     `https://openweathermap.org/img/wn/${props.cityItem.detail?.weather?.[0]?.icon}@2x.png`,
   )
@@ -165,7 +176,7 @@
   gap: 4px;
 }
 
-.current-temperature span {
+.current-temperature-label {
   color: var(--color-text-soft);
   font-size: 11px;
 }
@@ -176,6 +187,13 @@
   font-weight: 650;
   letter-spacing: -0.04em;
   line-height: 1;
+}
+
+.temperature-count {
+  display: inline-block;
+  min-width: 2ch;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .weather-visual {

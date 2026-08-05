@@ -31,7 +31,7 @@ const windyCategories = [
   { label: '기온', overlay: 'temp' },
   { label: '강수', overlay: 'rain' },
   { label: '구름', overlay: 'clouds' },
-  { label: '기압', overlay: 'pressure' },
+  { label: '위성', overlay: 'satellite' },
   { label: '바람', overlay: 'wind' },
   { label: '레이더', overlay: 'radar' },
   { label: 'UV 지수', overlay: 'uvindex' },

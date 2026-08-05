@@ -1,25 +1,47 @@
 # 구현 기능
 
+기능별 `구현 파일`을 선택하면 관련 코드를 바로 확인할 수 있습니다.
+
 - **실시간 도시 검색** — 검색 즉시 카드 필터링, 쉼표를 이용한 다중 검색
+  - 구현 파일: [`SearchBar.vue`](src/components/exercise/SearchBar.vue), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 - **검색 URL 동기화** — 검색어를 `?q=`에 저장하고 새로고침·URL 공유 시 복원
+  - 구현 파일: [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 - **다중 기준 정렬** — 이름·기온·체감온도·습도·풍속 정렬 및 오름차순·내림차순 전환
+  - 구현 파일: [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 - **즐겨찾기** — 도시별 즐겨찾기와 즐겨찾기 전용 필터, 브라우저 재접속 시 복원
+  - 구현 파일: [`useFavoriteCities.js`](src/composables/useFavoriteCities.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue)
 - **온도 단위 변경** — Pinia를 이용해 전체 화면의 섭씨·화씨를 동시에 변경
+  - 구현 파일: [`configStore.js`](src/stores/configStore.js), [`UnitToggler.vue`](src/components/exercise/UnitToggler.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 - **라이트·다크 모드** — Pinia 전역 테마 상태와 CSS 색상 토큰을 이용한 화면 테마 전환
+  - 구현 파일: [`configStore.js`](src/stores/configStore.js), [`ThemeToggler.vue`](src/components/exercise/ThemeToggler.vue), [`App.vue`](src/App.vue), [`base.css`](src/assets/base.css)
 - **라우팅 기반 모달** — URL이 변경되는 상세 라우트를 대시보드 위 모달로 표시
+  - 구현 파일: [`router/index.js`](src/router/index.js), [`WeatherHomeView.vue`](src/views/WeatherHomeView.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 - **모달 스크롤 제어** — 상세 모달이 열리면 배경 스크롤을 잠그고 닫을 때 복원
+  - 구현 파일: [`WeatherHomeView.vue`](src/views/WeatherHomeView.vue)
 - **시간대별 예보** — 현재부터 3시간 간격의 기온·아이콘·강수확률·풍속을 가로 스크롤로 표시
+  - 구현 파일: [`weatherApi.js`](src/api/weatherApi.js), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 - **5일 예보** — 도시별 최고·최저 기온, 날씨, 강수확률 표시
+  - 구현 파일: [`weatherApi.js`](src/api/weatherApi.js), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 - **온도 카운트 효과** — 카드와 상세 모달의 현재 기온을 목표값까지 자연스럽게 증가시키는 애니메이션
-- **API 캐싱** — 현재 날씨 목록과 도시별 5일 예보를 각각 1시간 캐싱
+  - 구현 파일: [`CountUp.vue`](src/components/exercise/CountUp.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
+- **API 캐싱** — 현재 날씨 목록과 도시별 시간대·5일 예보를 각각 1시간 캐싱
+  - 구현 파일: [`weatherApi.js`](src/api/weatherApi.js)
 - **캐시 상태·갱신** — 캐시 사용 여부와 남은 시간을 표시하고 만료 시 자동 또는 버튼으로 갱신
+  - 구현 파일: [`weatherApi.js`](src/api/weatherApi.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 - **사용자 도시 추가** — 기존 목록 필터와 Geocoding 도시 추가 검색을 하나의 검색창으로 통합
+  - 구현 파일: [`SearchBar.vue`](src/components/exercise/SearchBar.vue), [`weatherApi.js`](src/api/weatherApi.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 - **내 위치 날씨** — 브라우저 위치 권한으로 현재 지역 날씨를 세션 동안 목록 최상단에 표시
+  - 구현 파일: [`weatherParent.vue`](src/components/exercise/weatherParent.vue), [`weatherApi.js`](src/api/weatherApi.js)
 - **컴포넌트 분리** — 검색·카드·지도·단위 기능을 분리하고 props/emits로 연결
+  - 구현 파일: [`BaseDashboardCard.vue`](src/components/exercise/BaseDashboardCard.vue), [`SearchBar.vue`](src/components/exercise/SearchBar.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`WeatherMap.vue`](src/components/exercise/WeatherMap.vue), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 - **날씨 지도** — Windy의 기온·강수·구름·기압·바람·레이더·UV 레이어 전환
-- **예외 처리** — API 로딩·성공·실패 상태와 제공
-- **404 화면 제공** - 비허용 url 관리 -> https://zzl-hyun.github.io/skala-vue/#/no
+  - 구현 파일: [`WeatherMap.vue`](src/components/exercise/WeatherMap.vue), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
+- **예외 처리** — API 로딩·성공·실패 상태를 구분해 표시
+  - 구현 파일: [`weatherParent.vue`](src/components/exercise/weatherParent.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
+- **404 화면 제공** — 등록되지 않은 URL을 별도의 404 화면으로 연결 ([배포 화면 확인](https://zzl-hyun.github.io/skala-vue/#/no))
+  - 구현 파일: [`router/index.js`](src/router/index.js), [`NotFoundView.vue`](src/views/NotFoundView.vue)
 - **반응형 UI** — 날씨 카드 2열·1열 전환과 모바일 상세 모달 대응
+  - 구현 파일: [`weatherParent.vue`](src/components/exercise/weatherParent.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`WeatherHomeView.vue`](src/views/WeatherHomeView.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 
 # 사용 라이브러리
 

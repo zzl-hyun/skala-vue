@@ -18,6 +18,7 @@ import { computed } from 'vue'
 import { useConfigStore } from '@/stores/configStore'
 
 const configStore = useConfigStore()
+// console.log(configStore.theme)
 const buttonLabel = computed(() =>
   configStore.isDark ? '라이트 모드로 전환' : '다크 모드로 전환',
 )

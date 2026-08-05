@@ -172,6 +172,7 @@ const loadFiveDayForecast = async (currentCity) => {
       latitude: lat,
       longitude: lon,
     });
+    // console.log(forecast)
 
     if (String(city.value?.id) !== requestedCityId) return;
 

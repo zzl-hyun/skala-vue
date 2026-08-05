@@ -76,6 +76,7 @@ const requestCurrentWeather = async (city) => {
       },
     },
   )
+  // console.log(data)
 
   return {
     ...city,
@@ -103,6 +104,7 @@ export const getWeatherList = async ({ forceRefresh = false } = {}) => {
   const weatherList = await Promise.all(
     allCities.map(requestCurrentWeather),
   )
+  // console.log(weatherList)
 
   saveWeatherListCache(weatherList)
 
@@ -120,6 +122,7 @@ export const searchCities = async (query) => {
       },
     },
   )
+  // console.log(data)
 
   return data.map((city) => ({
     key: `${city.lat}-${city.lon}`,
@@ -203,6 +206,7 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
       },
     },
   )
+  // console.log(data.list)
 
   const timezoneOffset = data.city?.timezone ?? 0
   const dailyForecasts = data.list.reduce((days, item) => {
@@ -245,6 +249,7 @@ export const getFiveDayForecast = async ({ cityId, latitude, longitude }) => {
 
     return days
   }, {})
+  // console.log(dailyForecasts)
 
   const forecast = Object.values(dailyForecasts)
     .slice(0, 5)

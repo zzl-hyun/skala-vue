@@ -87,6 +87,7 @@
           default: false,
       }
   })
+  // console.log(props.cityItem)
   const emit = defineEmits(['select-card', 'toggle-favorite', 'click-detail'])
   const configStore = useConfigStore();
   const displayedTemperature = computed(() =>

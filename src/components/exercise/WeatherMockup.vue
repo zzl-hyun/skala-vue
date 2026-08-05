@@ -16,6 +16,7 @@ const apiStatus = ref('loading');
 onMounted(async () => {
   try {
     weatherList.value = await getWeatherList();
+    // console.log(weatherList.value)
     apiStatus.value = 'success';
   } catch (error) {
     console.error(API_FAIL, error);

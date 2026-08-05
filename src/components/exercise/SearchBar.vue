@@ -144,6 +144,7 @@ const handleCitySearch = async () => {
 
     try {
         searchResults.value = await searchCities(query)
+        // console.log(searchResults.value)
         searchStatus.value = searchResults.value.length ? 'success' : 'empty'
     } catch (error) {
         console.error(error)

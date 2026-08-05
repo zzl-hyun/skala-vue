@@ -19,6 +19,7 @@ const restorePageScroll = () => {
 watch(
   () => route.name === 'detail',
   (isModalOpen) => {
+    // console.log(isModalOpen)
     if (!isModalOpen) {
       restorePageScroll();
       return;

@@ -22,10 +22,12 @@ export const useConfigStore = defineStore('config', () => {
 
   function toggleUnit() {
     unit.value = unit.value === 'celsius' ? 'fahrenheit' : 'celsius';
+    // console.log(unit.value)
   }
 
   function toggleTheme() {
     theme.value = isDark.value ? 'light' : 'dark';
+    // console.log(theme.value)
   }
 
   function convertTemp(celsius) {

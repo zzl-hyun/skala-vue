@@ -24,14 +24,18 @@
   - 구현 파일: [`weatherApi.js`](src/api/weatherApi.js), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 - **온도 카운트 효과** — 카드와 상세 모달의 현재 기온을 목표값까지 자연스럽게 증가시키는 애니메이션
   - 구현 파일: [`CountUp.vue`](src/components/exercise/CountUp.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
-- **API 캐싱** — 현재 날씨 목록과 도시별 시간대·5일 예보를 각각 1시간 캐싱
-  - 구현 파일: [`weatherApi.js`](src/api/weatherApi.js)
+- **API 캐싱** — 현재 날씨·도시별 예보는 1시간, 기상특보는 30분 동안 캐싱
+  - 구현 파일: [`weatherApi.js`](src/api/weatherApi.js), [`kmaWarningApi.js`](src/api/kmaWarningApi.js)
 - **캐시 상태·갱신** — 캐시 사용 여부와 남은 시간을 표시하고 만료 시 자동 또는 버튼으로 갱신
   - 구현 파일: [`weatherApi.js`](src/api/weatherApi.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
-- **사용자 도시 추가** — 기존 목록 필터와 Geocoding 도시 추가 검색을 하나의 검색창으로 통합
+- **사용자 도시 추가** — 기존 목록 필터와 카카오 주소 검색을 하나의 검색창으로 통합하고 좌표 기반 날씨 조회
   - 구현 파일: [`SearchBar.vue`](src/components/exercise/SearchBar.vue), [`weatherApi.js`](src/api/weatherApi.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
+- **도시 카드 삭제** — 기본·사용자 추가·현재 위치 카드를 삭제하고 저장 목록·캐시·즐겨찾기 상태를 함께 정리
+  - 구현 파일: [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`weatherParent.vue`](src/components/exercise/weatherParent.vue), [`weatherApi.js`](src/api/weatherApi.js), [`useFavoriteCities.js`](src/composables/useFavoriteCities.js)
 - **내 위치 날씨** — 브라우저 위치 권한으로 현재 지역 날씨를 세션 동안 목록 최상단에 표시
   - 구현 파일: [`weatherParent.vue`](src/components/exercise/weatherParent.vue), [`weatherApi.js`](src/api/weatherApi.js)
+- **기상특보** — 기상청 특보를 도시별로 연결해 카드에는 대표 특보, 상세 모달에는 전체 특보 표시
+  - 구현 파일: [`fetch-kma-warnings.mjs`](scripts/fetch-kma-warnings.mjs), [`kmaWarningApi.js`](src/api/kmaWarningApi.js), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 - **컴포넌트 분리** — 검색·카드·지도·단위 기능을 분리하고 props/emits로 연결
   - 구현 파일: [`BaseDashboardCard.vue`](src/components/exercise/BaseDashboardCard.vue), [`SearchBar.vue`](src/components/exercise/SearchBar.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`WeatherMap.vue`](src/components/exercise/WeatherMap.vue), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 - **날씨 지도** — Windy의 기온·강수·구름·기압·바람·레이더·UV 레이어 전환
@@ -47,14 +51,16 @@
 
 - **Vue 3** — Composition API와 컴포넌트 기반 화면 구성
 - **Vue Router · Pinia** — 라우팅, 검색 쿼리, 전역 단위·테마 상태 관리
-- **Axios** — OpenWeather 현재 날씨·지역 검색·예보 요청
+- **Axios** — OpenWeather 날씨·예보, 카카오 주소 검색, 기상특보 JSON 요청
 - **Nuxt UI · Tailwind CSS** — 공통 UI 컴포넌트와 스타일 시스템
 - **Vue Bits Count Up · Vite** — 온도 숫자 애니메이션과 개발·빌드 환경
 
 # 외부 API 및 서비스
 
-- **OpenWeather Current Weather · Geocoding API** — 기본·사용자 추가 도시의 위치 검색과 현재 관측 정보 조회
+- **OpenWeather Current Weather API** — 기본·사용자 추가 도시의 현재 관측 정보 조회
 - **OpenWeather 5 Day / 3 Hour Forecast API** — 선택 도시의 3시간 간격 예보를 5일 일별 예보로 가공
+- **Kakao Local API** — 국내 행정구역 주소 검색과 날씨 조회용 좌표 변환
+- **기상청 API Hub** — 전국 기상특보를 조회해 도시별 주의보·경보 표시
 - **Windy Embed Map** — 대한민국 중심 날씨 지도와 레이어 표시
 - **Browser Geolocation API** — 사용자 동의 후 현재 위도·경도를 조회해 위치 기반 날씨 표시
 - **GitHub Actions · GitHub Pages** — `main` 브랜치 자동 빌드 및 배포

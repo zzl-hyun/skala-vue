@@ -40,6 +40,7 @@ jobs:
         env:
           VITE_OPENWEATHER_API_KEY: ${{ secrets.VITE_OPENWEATHER_API_KEY }}
           VITE_KMA_API_KEY: ${{ secrets.VITE_KMA_API_KEY }}
+          VITE_KAKAO_REST_API_KEY: ${{ secrets.VITE_KAKAO_REST_API_KEY }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

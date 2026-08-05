@@ -28,7 +28,7 @@
         <div>
           <strong>{{ city.name_kr }}</strong>
           <span>
-            {{ [city.name, city.state, city.country].filter(Boolean).join(' · ') }}
+            {{ [city.state, city.country].filter(Boolean).join(' · ') }}
           </span>
         </div>
         <UButton type="button" color="neutral" variant="outline" size="xs" :disabled="adding || locating" @click="emit('add-city', city)"> 목록에 추가 </UButton>

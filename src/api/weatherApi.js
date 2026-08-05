@@ -132,28 +132,36 @@ export const getWeatherList = async ({ forceRefresh = false } = {}) => {
 }
 
 /**
- * 입력한 도시명을 Geocoding API로 검색한다.
- * 동명 도시를 구분할 수 있도록 국가, 지역, 좌표를 포함한 후보를 최대 5개 반환한다.
+ * 카카오 주소 검색 API로 국내 행정구역을 검색한다.
+ * 검색된 좌표는 기존 OpenWeather 현재 날씨 조회에 그대로 전달한다.
  */
 export const searchCities = async (query) => {
-  const { data } = await axios.get('https://api.openweathermap.org/geo/1.0/direct', {
+  const { data } = await axios.get('https://dapi.kakao.com/v2/local/search/address.json', {
+    headers: {
+      Authorization: `KakaoAK ${import.meta.env.VITE_KAKAO_REST_API_KEY}`,
+    },
     params: {
-      q: query,
-      limit: 5,
-      appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
+      query,
+      size: 5,
     },
   })
   // console.log(data)
 
-  return data.map((city) => ({
-    key: `${city.lat}-${city.lon}`,
-    name: city.name,
-    name_kr: city.local_names?.ko ?? city.name,
-    state: city.state ?? '',
-    country: city.country,
-    lat: city.lat,
-    lon: city.lon,
-  }))
+  return data.documents.map((result) => {
+    const address = result.address
+    const cityName = address.region_3depth_name || address.region_2depth_name || address.region_1depth_name
+    const state = [address.region_1depth_name, address.region_2depth_name].filter((region) => region && region !== cityName).join(' ')
+
+    return {
+      key: address.b_code || `${result.x}-${result.y}`,
+      name: cityName,
+      name_kr: cityName,
+      state,
+      country: 'KR',
+      lat: Number(result.y),
+      lon: Number(result.x),
+    }
+  })
 }
 
 // 현재 위치와 검색 결과 모두 같은 현재 날씨 요청 함수를 재사용한다.

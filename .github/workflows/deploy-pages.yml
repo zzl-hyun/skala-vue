@@ -8,7 +8,7 @@ on:
     - cron: '17 * * * *'
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -50,6 +50,19 @@ jobs:
             throw new Error('KMA warning snapshot is invalid; keeping the previous Pages deployment.');
           }
           console.log('Validated KMA warning snapshot:', data.warnings.length, 'warnings');"
+
+      - name: Save latest KMA warning snapshot
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/kma-warnings.json
+          if git diff --cached --quiet; then
+            echo "KMA warning snapshot is unchanged."
+          else
+            git commit -m "chore: update KMA warning snapshot [skip ci]"
+            git push origin HEAD:main
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

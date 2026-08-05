@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const WARNING_CACHE_KEY = 'kma-weather-warnings-v1'
+const WARNING_CACHE_KEY = 'kma-weather-warnings-v2'
 const WARNING_CACHE_DURATION = 30 * 60 * 1000
 const WARNING_FILE_URL = `${import.meta.env.BASE_URL}kma-warnings.json`
 

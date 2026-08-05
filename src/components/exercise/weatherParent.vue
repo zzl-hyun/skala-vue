@@ -38,7 +38,7 @@
             <UButton
               type="button"
               color="neutral"
-              variant="outline"
+              variant="ghost"
               size="xs"
               :loading="isRefreshing"
               :disabled="apiStatus === 'loading'"
@@ -55,17 +55,20 @@
               size="sm"
               aria-label="정렬 기준" />
 
-            <UButton
+            <button
               type="button"
-              color="neutral"
-              variant="solid"
-              size="sm"
-              square
               class="sort-direction"
               :aria-label="sortDirection === 'asc' ? '내림차순으로 변경' : '오름차순으로 변경'"
               @click="toggleSortDirection">
-              {{ sortDirection === 'asc' ? '↑' : '↓' }}
-            </UButton>
+              <svg
+                class="sort-direction-icon"
+                :class="{ 'sort-direction-icon--down': sortDirection === 'desc' }"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true">
+                <path d="M12 19V5M6.5 10.5 12 5l5.5 5.5" />
+              </svg>
+            </button>
 
             <UButton
               type="button"
@@ -75,7 +78,7 @@
               class="favorite-filter"
               :aria-pressed="favoriteOnly"
               @click="favoriteOnly = !favoriteOnly">
-              ★ 즐겨찾기 <span>{{ favoriteCount }}</span>
+              <span style="color: orange;">★</span> 즐겨찾기 <span>{{ favoriteCount }}</span>
             </UButton>
           </div>
           
@@ -262,7 +265,6 @@ const loadCurrentLocation = async () => {
       isCurrentLocation: true,
     };
     searchQuery.value = '';
-    favoriteOnly.value = false;
     cityAddMessage.value = `현재 위치(${locationName}) 날씨를 불러왔습니다.`;
   } catch (error) {
     cityAddMessage.value = getLocationErrorMessage(error);
@@ -512,13 +514,46 @@ const showDetail = (city) => {
 }
 
 .sort-direction {
+  display: inline-grid;
+  place-items: center;
   width: 36px;
   height: 36px;
-  font-size: 18px;
-  line-height: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sort-direction:hover {
+  background: var(--color-background-mute);
+  color: var(--color-heading);
+}
+
+.sort-direction:focus-visible {
+  outline: 2px solid var(--color-border-soft);
+  outline-offset: 2px;
+}
+
+.sort-direction-icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.18s ease;
+}
+
+.sort-direction-icon--down {
+  transform: rotate(180deg);
 }
 
 .favorite-filter {
+  margin-left: auto;
   min-height: 36px;
 }
 

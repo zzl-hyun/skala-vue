@@ -1,6 +1,32 @@
 {
-  "fetchedAt": "2026-08-05T22:19:45.629Z",
+  "fetchedAt": "2026-08-06T00:09:24.105Z",
   "warnings": [
+    {
+      "regionGroupCode": "S1330000",
+      "regionGroupName": "제주도전해상",
+      "regionCode": "S1324110",
+      "regionName": "제주도남동쪽안쪽먼바다",
+      "issuedAt": "202608060900",
+      "effectiveAt": "202608061100",
+      "type": "풍랑",
+      "level": "주의",
+      "command": "발표",
+      "endTime": "12일 밤(21시~24시)",
+      "label": "풍랑 주의"
+    },
+    {
+      "regionGroupCode": "S1330000",
+      "regionGroupName": "제주도전해상",
+      "regionCode": "S1324210",
+      "regionName": "제주도남서쪽안쪽먼바다",
+      "issuedAt": "202608060900",
+      "effectiveAt": "202608061100",
+      "type": "풍랑",
+      "level": "주의",
+      "command": "발표",
+      "endTime": "12일 밤(21시~24시)",
+      "label": "풍랑 주의"
+    },
     {
       "regionGroupCode": "S1310000",
       "regionGroupName": "남해동부전해상",
@@ -86,32 +112,6 @@
       "regionName": "제주도서부앞바다",
       "issuedAt": "202608051600",
       "effectiveAt": "202608062358",
-      "type": "풍랑",
-      "level": "예비",
-      "command": "발표",
-      "endTime": "",
-      "label": "풍랑 예비특보"
-    },
-    {
-      "regionGroupCode": "S1330000",
-      "regionGroupName": "제주도전해상",
-      "regionCode": "S1324110",
-      "regionName": "제주도남동쪽안쪽먼바다",
-      "issuedAt": "202608050400",
-      "effectiveAt": "202608061158",
-      "type": "풍랑",
-      "level": "예비",
-      "command": "발표",
-      "endTime": "",
-      "label": "풍랑 예비특보"
-    },
-    {
-      "regionGroupCode": "S1330000",
-      "regionGroupName": "제주도전해상",
-      "regionCode": "S1324210",
-      "regionName": "제주도남서쪽안쪽먼바다",
-      "issuedAt": "202608050400",
-      "effectiveAt": "202608061158",
       "type": "풍랑",
       "level": "예비",
       "command": "발표",

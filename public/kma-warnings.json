@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-08-06T06:43:47.906Z",
+  "fetchedAt": "2026-08-06T09:50:05.548Z",
   "warnings": [
     {
       "regionGroupCode": "S1330000",
@@ -52,6 +52,19 @@
       "command": "발표",
       "endTime": "12일 밤(21시~24시)",
       "label": "풍랑 주의"
+    },
+    {
+      "regionGroupCode": "S1230000",
+      "regionGroupName": "서해남부전해상",
+      "regionCode": "S1232220",
+      "regionName": "서해남부남쪽바깥먼바다",
+      "issuedAt": "202608061600",
+      "effectiveAt": "202608072358",
+      "type": "풍랑",
+      "level": "예비",
+      "command": "발표",
+      "endTime": "",
+      "label": "풍랑 예비특보"
     },
     {
       "regionGroupCode": "S1310000",
@@ -3057,6 +3070,58 @@
       "label": "폭염 주의"
     },
     {
+      "regionGroupCode": "L1040000",
+      "regionGroupName": "충청북도",
+      "regionCode": "L1040400",
+      "regionName": "괴산군",
+      "issuedAt": "202608061600",
+      "effectiveAt": "202608061800",
+      "type": "열대야",
+      "level": "주의",
+      "command": "발표",
+      "endTime": "",
+      "label": "열대야 주의"
+    },
+    {
+      "regionGroupCode": "L1040000",
+      "regionGroupName": "충청북도",
+      "regionCode": "L1040800",
+      "regionName": "충주시",
+      "issuedAt": "202608061600",
+      "effectiveAt": "202608061800",
+      "type": "열대야",
+      "level": "주의",
+      "command": "발표",
+      "endTime": "",
+      "label": "열대야 주의"
+    },
+    {
+      "regionGroupCode": "L1040000",
+      "regionGroupName": "충청북도",
+      "regionCode": "L1041000",
+      "regionName": "진천군",
+      "issuedAt": "202608061600",
+      "effectiveAt": "202608061800",
+      "type": "열대야",
+      "level": "주의",
+      "command": "발표",
+      "endTime": "",
+      "label": "열대야 주의"
+    },
+    {
+      "regionGroupCode": "L1040000",
+      "regionGroupName": "충청북도",
+      "regionCode": "L1041100",
+      "regionName": "음성군",
+      "issuedAt": "202608061600",
+      "effectiveAt": "202608061800",
+      "type": "열대야",
+      "level": "주의",
+      "command": "발표",
+      "endTime": "",
+      "label": "열대야 주의"
+    },
+    {
       "regionGroupCode": "L1021900",
       "regionGroupName": "동해시",
       "regionCode": "L1021910",
@@ -3070,49 +3135,10 @@
       "label": "열대야 주의"
     },
     {
-      "regionGroupCode": "L1021900",
-      "regionGroupName": "동해시",
-      "regionCode": "L1021920",
-      "regionName": "동해시산지",
-      "issuedAt": "202608051600",
-      "effectiveAt": "202608051800",
-      "type": "열대야",
-      "level": "주의",
-      "command": "발표",
-      "endTime": "",
-      "label": "열대야 주의"
-    },
-    {
-      "regionGroupCode": "L1022000",
-      "regionGroupName": "삼척시",
-      "regionCode": "L1022020",
-      "regionName": "삼척시산지",
-      "issuedAt": "202608051600",
-      "effectiveAt": "202608051800",
-      "type": "열대야",
-      "level": "주의",
-      "command": "발표",
-      "endTime": "",
-      "label": "열대야 주의"
-    },
-    {
       "regionGroupCode": "L1022100",
       "regionGroupName": "속초시",
       "regionCode": "L1022110",
       "regionName": "속초시평지",
-      "issuedAt": "202608051600",
-      "effectiveAt": "202608051800",
-      "type": "열대야",
-      "level": "주의",
-      "command": "발표",
-      "endTime": "",
-      "label": "열대야 주의"
-    },
-    {
-      "regionGroupCode": "L1022100",
-      "regionGroupName": "속초시",
-      "regionCode": "L1022120",
-      "regionName": "속초시산지",
       "issuedAt": "202608051600",
       "effectiveAt": "202608051800",
       "type": "열대야",
@@ -3139,19 +3165,6 @@
       "regionGroupName": "강릉시",
       "regionCode": "L1022510",
       "regionName": "강릉시평지",
-      "issuedAt": "202608051600",
-      "effectiveAt": "202608051800",
-      "type": "열대야",
-      "level": "주의",
-      "command": "발표",
-      "endTime": "",
-      "label": "열대야 주의"
-    },
-    {
-      "regionGroupCode": "L1022500",
-      "regionGroupName": "강릉시",
-      "regionCode": "L1022520",
-      "regionName": "강릉시산지",
       "issuedAt": "202608051600",
       "effectiveAt": "202608051800",
       "type": "열대야",
@@ -4110,32 +4123,6 @@
       "label": "열대야 주의"
     },
     {
-      "regionGroupCode": "L1070000",
-      "regionGroupName": "경상북도",
-      "regionCode": "L1071400",
-      "regionName": "예천군",
-      "issuedAt": "202608011600",
-      "effectiveAt": "202608011800",
-      "type": "열대야",
-      "level": "주의",
-      "command": "발표",
-      "endTime": "",
-      "label": "열대야 주의"
-    },
-    {
-      "regionGroupCode": "L1072700",
-      "regionGroupName": "안동시",
-      "regionCode": "L1072720",
-      "regionName": "안동시동남부",
-      "issuedAt": "202608011600",
-      "effectiveAt": "202608011800",
-      "type": "열대야",
-      "level": "주의",
-      "command": "발표",
-      "endTime": "",
-      "label": "열대야 주의"
-    },
-    {
       "regionGroupCode": "L1130100",
       "regionGroupName": "광주광역시",
       "regionCode": "L1130120",
@@ -4337,19 +4324,6 @@
       "regionName": "합천군중부",
       "issuedAt": "202607311600",
       "effectiveAt": "202607311800",
-      "type": "열대야",
-      "level": "주의",
-      "command": "발표",
-      "endTime": "",
-      "label": "열대야 주의"
-    },
-    {
-      "regionGroupCode": "L1022300",
-      "regionGroupName": "양양군",
-      "regionCode": "L1022320",
-      "regionName": "양양군산지",
-      "issuedAt": "202607291600",
-      "effectiveAt": "202607291800",
       "type": "열대야",
       "level": "주의",
       "command": "발표",
